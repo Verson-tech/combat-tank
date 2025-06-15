@@ -26,8 +26,8 @@
 
 .d-pad button {
     position: absolute;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     background-color: rgba(255, 153, 0, 0.7);
     border: none;
     border-radius: 50%;
@@ -47,8 +47,8 @@
     position: absolute;
     right: 30px;
     bottom: 30px;
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     background-color: rgba(204, 0, 0, 0.7);
     border: none;
     border-radius: 50%;
@@ -57,20 +57,157 @@
     font-weight: bold;
 }
 
-/* Media queries for responsive canvas */
+/* Enhanced responsive styles */
 @media (max-width: 800px) {
+    #game-container {
+        width: 100%;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a1a1a;
+    }
+    
     canvas {
         width: 100%;
         height: auto;
+        max-height: 70vh;
+        touch-action: none; /* Prevent browser handling of touch events */
     }
     
     .touch-controls {
         display: block;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 25vh;
+        z-index: 100;
+    }
+    
+    #hud {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 16px;
+        color: white;
+        z-index: 101;
+    }
+    
+    /* Make buttons more finger-friendly */
+    .d-pad button {
+        width: 60px;
+        height: 60px;
+        opacity: 0.8;
+    }
+    
+    #shoot-btn {
+        width: 80px;
+        height: 80px;
+        opacity: 0.8;
     }
     
     #controls-info {
         display: none;
     }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 800px) and (orientation: landscape) {
+    canvas {
+        max-height: 60vh;
+    }
+    
+    .touch-controls {
+        height: 35vh;
+    }
+    
+    .d-pad {
+        left: 10px;
+        bottom: 10px;
+    }
+    
+    #shoot-btn {
+        right: 10px;
+        bottom: 10px;
+    }
+}
+
+/* Loading screen styles */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Settings panel styles */
+#settings-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 103;
+    display: none;
+    width: 80%;
+    max-width: 400px;
+}
+
+#settings-panel h2 {
+    text-align: center;
+    margin-top: 0;
+}
+
+#settings-panel div {
+    margin: 10px 0;
+}
+
+#settings-panel button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 10px 20px;
+}
+
+/* Settings button */
+#settings-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 102;
+    font-size: 24px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+/* Fullscreen button */
+#fullscreen-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 102;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
 }
 </style>
     <div id="game-container">
@@ -88,7 +225,13 @@
             Use WASD or Arrow keys to move and SPACE to shoot
         </div>
     </div>
-
+    
+    <!-- Loading screen -->
+    <div id="loading-screen">
+        <h2>Ukrainian Combat Tank</h2>
+        <p>Loading game...</p>
+        <p>Tap to start</p>
+    </div>
 </body>
 </html>
     <script>
@@ -108,7 +251,7 @@
         const PLAYER_SPEED = 4;
         const ENEMY_SPEED = 2;
         const ENEMY_SHOOT_CHANCE = 0.01;
-        const MAX_ENEMIES = 5;
+        let MAX_ENEMIES = 5;
 
         // Colors
         const COLORS = {
@@ -150,44 +293,499 @@
         const restartButton = document.getElementById('restart-button');
         const scoreDisplay = document.getElementById('score');
         const livesDisplay = document.getElementById('lives');
+        const loadingScreen = document.getElementById('loading-screen');
 
-        // adding touch controls to replace keyboard input
-let touchStartX = 0;
-let touchStartY = 0;
-let isShooting = false;
-let moveDirection = null;
-let touchControls = document.createElement('div');
+        // Check if device is mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-function setupTouchControls() {
-    // Create touch control elements
-    touchControls.className = 'touch-controls';
-    touchControls.innerHTML = `
-        <div class="d-pad">
-            <button id="up-btn">↑</button>
-            <button id="left-btn">←</button>
-            <button id="right-btn">→</button>
-            <button id="down-btn">↓</button>
-        </div>
-        <button id="shoot-btn">FIRE</button>
-    `;
-    document.getElementById('game-container').appendChild(touchControls);
-    
-    // Add event listeners for touch buttons
-    document.getElementById('up-btn').addEventListener('touchstart', () => { keys.w = true; keys.arrowUp = true; });
-    document.getElementById('up-btn').addEventListener('touchend', () => { keys.w = false; keys.arrowUp = false; });
-    
-    document.getElementById('down-btn').addEventListener('touchstart', () => { keys.s = true; keys.arrowDown = true; });
-    document.getElementById('down-btn').addEventListener('touchend', () => { keys.s = false; keys.arrowDown = false; });
-    
-    document.getElementById('left-btn').addEventListener('touchstart', () => { keys.a = true; keys.arrowLeft = true; });
-    document.getElementById('left-btn').addEventListener('touchend', () => { keys.a = false; keys.arrowLeft = false; });
-    
-    document.getElementById('right-btn').addEventListener('touchstart', () => { keys.d = true; keys.arrowRight = true; });
-    document.getElementById('right-btn').addEventListener('touchend', () => { keys.d = false; keys.arrowRight = false; });
-    
-    document.getElementById('shoot-btn').addEventListener('touchstart', () => { keys.space = true; });
-    document.getElementById('shoot-btn').addEventListener('touchend', () => { keys.space = false; });
-}
+        // Touch control variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isShooting = false;
+        let moveDirection = null;
+        let touchControls = document.createElement('div');
+        let swipeControlsEnabled = false;
+        let tapToShootEnabled = false;
+        let orientationControlsEnabled = false;
+
+        // Setup basic touch controls
+        function setupTouchControls() {
+            // Create touch control elements
+            touchControls.className = 'touch-controls';
+            touchControls.innerHTML = `
+                <div class="d-pad">
+                    <button id="up-btn">↑</button>
+                    <button id="left-btn">←</button>
+                    <button id="right-btn">→</button>
+                    <button id="down-btn">↓</button>
+                </div>
+                <button id="shoot-btn">FIRE</button>
+            `;
+            document.getElementById('game-container').appendChild(touchControls);
+            
+            // Add event listeners for touch buttons
+            document.getElementById('up-btn').addEventListener('touchstart', (e) => { 
+                e.preventDefault();
+                keys.w = true; 
+                keys.arrowUp = true; 
+            });
+            document.getElementById('up-btn').addEventListener('touchend', () => { 
+                keys.w = false; 
+                keys.arrowUp = false; 
+            });
+            
+            document.getElementById('down-btn').addEventListener('touchstart', (e) => { 
+                e.preventDefault();
+                keys.s = true; 
+                keys.arrowDown = true; 
+            });
+            document.getElementById('down-btn').addEventListener('touchend', () => { 
+                keys.s = false; 
+                keys.arrowDown = false; 
+            });
+            
+            document.getElementById('left-btn').addEventListener('touchstart', (e) => { 
+                e.preventDefault();
+                keys.a = true; 
+                keys.arrowLeft = true; 
+            });
+            document.getElementById('left-btn').addEventListener('touchend', () => { 
+                keys.a = false; 
+                keys.arrowLeft = false; 
+            });
+            
+            document.getElementById('right-btn').addEventListener('touchstart', (e) => { 
+                e.preventDefault();
+                keys.d = true; 
+                keys.arrowRight = true; 
+            });
+            document.getElementById('right-btn').addEventListener('touchend', () => { 
+                keys.d = false; 
+                keys.arrowRight = false; 
+            });
+            
+            document.getElementById('shoot-btn').addEventListener('touchstart', (e) => { 
+                e.preventDefault();
+                keys.space = true; 
+            });
+            document.getElementById('shoot-btn').addEventListener('touchend', () => { 
+                keys.space = false; 
+            });
+        }
+
+        // Enhance touch controls with better positioning and responsiveness
+        function enhanceTouchControls() {
+            // Make D-pad buttons larger and more spaced out
+            const dpad = document.querySelector('.d-pad');
+            const buttons = dpad.querySelectorAll('button');
+            
+            buttons.forEach(btn => {
+                btn.style.width = '60px';
+                btn.style.height = '60px';
+            });
+            
+            // Increase shoot button size
+            const shootBtn = document.getElementById('shoot-btn');
+            shootBtn.style.width = '80px';
+            shootBtn.style.height = '80px';
+            
+            // Add touch feedback
+            const allButtons = document.querySelectorAll('.touch-controls button');
+            allButtons.forEach(btn => {
+                btn.addEventListener('touchstart', () => {
+                    btn.style.opacity = '0.7';
+                });
+                btn.addEventListener('touchend', () => {
+                    btn.style.opacity = '1';
+                });
+            });
+        }
+
+        // Add swipe controls for more intuitive movement
+        function addSwipeControls() {
+            const gameCanvas = document.getElementById('gameCanvas');
+            
+            gameCanvas.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            gameCanvas.addEventListener('touchmove', (e) => {
+                if (!swipeControlsEnabled) return;
+                
+                e.preventDefault(); // Prevent scrolling while swiping
+                
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                
+                const diffX = touchX - touchStartX;
+                const diffY = touchY - touchStartY;
+                
+                // Determine swipe direction based on the larger difference
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    // Horizontal swipe
+                    if (diffX > 20) {
+                        keys.d = true;
+                        keys.arrowRight = true;
+                        keys.a = false;
+                        keys.arrowLeft = false;
+                    } else if (diffX < -20) {
+                        keys.a = true;
+                        keys.arrowLeft = true;
+                        keys.d = false;
+                        keys.arrowRight = false;
+                    }
+                    keys.w = false;
+                    keys.arrowUp = false;
+                    keys.s = false;
+                    keys.arrowDown = false;
+                } else {
+                    // Vertical swipe
+                    if (diffY > 20) {
+                        keys.s = true;
+                        keys.arrowDown = true;
+                        keys.w = false;
+                        keys.arrowUp = false;
+                    } else if (diffY < -20) {
+                        keys.w = true;
+                        keys.arrowUp = true;
+                        keys.s = false;
+                        keys.arrowDown = false;
+                    }
+                    keys.a = false;
+                    keys.arrowLeft = false;
+                    keys.d = false;
+                    keys.arrowRight = false;
+                }
+            });
+            
+            gameCanvas.addEventListener('touchend', () => {
+                if (!swipeControlsEnabled) return;
+                
+                // Reset all movement keys
+                keys.w = false;
+                keys.a = false;
+                keys.s = false;
+                keys.d = false;
+                keys.arrowUp = false;
+                keys.arrowDown = false;
+                keys.arrowLeft = false;
+                keys.arrowRight = false;
+            });
+        }
+
+        // Add tap-to-shoot functionality
+        function addTapToShoot() {
+            const gameCanvas = document.getElementById('gameCanvas');
+            
+            gameCanvas.addEventListener('touchstart', (e) => {
+                if (!tapToShootEnabled) return;
+                
+                // Check if the tap is in the upper half of the screen (to avoid conflict with movement)
+                const touchY = e.touches[0].clientY;
+                const canvasRect = gameCanvas.getBoundingClientRect();
+                
+                if (touchY < canvasRect.top + canvasRect.height * 0.4) {
+                    keys.space = true;
+                    
+                    // Auto-release after a short delay
+                    setTimeout(() => {
+                        keys.space = false;
+                    }, 100);
+                }
+            });
+        }
+
+        // Add device orientation controls as an alternative control method
+        function addOrientationControls() {
+            if (window.DeviceOrientationEvent) {
+                // Create a toggle button for orientation controls
+                const orientationToggle = document.createElement('button');
+                orientationToggle.id = 'orientation-toggle';
+                orientationToggle.textContent = 'Enable Tilt Controls';
+                orientationToggle.style.position = 'absolute';
+                orientationToggle.style.top = '50px';
+                orientationToggle.style.right = '10px';
+                orientationToggle.style.zIndex = '102';
+                orientationToggle.style.background = 'rgba(0,0,0,0.5)';
+                orientationToggle.style.color = 'white';
+                orientationToggle.style.border = 'none';
+                orientationToggle.style.borderRadius = '5px';
+                orientationToggle.style.padding = '5px 10px';
+                document.getElementById('game-container').appendChild(orientationToggle);
+                
+                let orientationHandler;
+                
+                orientationToggle.addEventListener('click', () => {
+                    if (!orientationControlsEnabled) {
+                        // Request permission for device orientation (required in iOS 13+)
+                        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                            DeviceOrientationEvent.requestPermission()
+                                .then(permissionState => {
+                                    if (permissionState === 'granted') {
+                                        enableOrientationControls();
+                                        orientationToggle.textContent = 'Disable Tilt Controls';
+                                        orientationControlsEnabled = true;
+                                    }
+                                })
+                                .catch(console.error);
+                        } else {
+                            // For devices that don't require permission
+                            enableOrientationControls();
+                            orientationToggle.textContent = 'Disable Tilt Controls';
+                            orientationControlsEnabled = true;
+                        }
+                    } else {
+                        disableOrientationControls();
+                        orientationToggle.textContent = 'Enable Tilt Controls';
+                        orientationControlsEnabled = false;
+                    }
+                });
+                
+                function enableOrientationControls() {
+                    orientationHandler = (event) => {
+                        if (!orientationControlsEnabled) return;
+                        
+                        const gamma = event.gamma; // Left/Right tilt [-90, 90]
+                        const beta = event.beta;   // Front/Back tilt [0, 180]
+                        
+                        // Reset all movement keys
+                        keys.w = false;
+                        keys.a = false;
+                        keys.s = false;
+                        keys.d = false;
+                        keys.arrowUp = false;
+                        keys.arrowDown = false;
+                        keys.arrowLeft = false;
+                        keys.arrowRight = false;
+                        
+                        // Set threshold for movement
+                        const threshold = 10;
+                        
+                        // Handle left/right tilt
+                        if (gamma < -threshold) {
+                            keys.a = true;
+                            keys.arrowLeft = true;
+                        } else if (gamma > threshold) {
+                            keys.d = true;
+                            keys.arrowRight = true;
+                        }
+                        
+                        // Handle front/back tilt
+                        if (beta < 45 - threshold) {
+                            keys.w = true;
+                            keys.arrowUp = true;
+                        } else if (beta > 45 + threshold) {
+                            keys.s = true;
+                            keys.arrowDown = true;
+                        }
+                    };
+                    
+                    window.addEventListener('deviceorientation', orientationHandler);
+                }
+                
+                function disableOrientationControls() {
+                    window.removeEventListener('deviceorientation', orientationHandler);
+                }
+            }
+        }
+
+        // Optimize game performance for mobile devices
+        function optimizeForMobile() {
+            if (isMobile) {
+                // Reduce canvas size for better performance
+                canvas.width = 600;
+                canvas.height = 450;
+                
+                // Reduce enemy count for better performance
+                MAX_ENEMIES = 3;
+                
+                // Adjust game speed slightly
+                PLAYER_SPEED = 3;
+                ENEMY_SPEED = 1.5;
+                
+                // Add fullscreen button
+                const fullscreenBtn = document.createElement('button');
+                fullscreenBtn.id = 'fullscreen-btn';
+                fullscreenBtn.textContent = 'Fullscreen';
+                document.getElementById('game-container').appendChild(fullscreenBtn);
+                
+                fullscreenBtn.addEventListener('click', () => {
+                    const gameContainer = document.getElementById('game-container');
+                    
+                    if (!document.fullscreenElement) {
+                        if (gameContainer.requestFullscreen) {
+                            gameContainer.requestFullscreen();
+                        } else if (gameContainer.webkitRequestFullscreen) {
+                            gameContainer.webkitRequestFullscreen();
+                        } else if (gameContainer.mozRequestFullScreen) {
+                            gameContainer.mozRequestFullScreen();
+                        } else if (gameContainer.msRequestFullscreen) {
+                            gameContainer.msRequestFullscreen();
+                        }
+                        
+                        // Lock to landscape if possible
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(e => console.log(e));
+                        }
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+            }
+        }
+
+        // Add a settings menu for mobile controls customization
+        function addSettingsMenu() {
+            // Create settings button
+            const settingsBtn = document.createElement('button');
+            settingsBtn.id = 'settings-btn';
+            settingsBtn.textContent = '⚙️';
+            document.getElementById('game-container').appendChild(settingsBtn);
+            
+            // Create settings panel
+            const settingsPanel = document.createElement('div');
+            settingsPanel.id = 'settings-panel';
+            
+            settingsPanel.innerHTML = `
+                <h2>Game Settings</h2>
+                
+                <div>
+                    <label>
+                        <input type="checkbox" id="toggle-dpad" checked> Show D-Pad Controls
+                    </label>
+                </div>
+                
+                <div>
+                    <label>
+                        <input type="checkbox" id="toggle-swipe"> Enable Swipe Controls
+                    </label>
+                </div>
+                
+                <div>
+                    <label>
+                        <input type="checkbox" id="toggle-tap-shoot"> Enable Tap-to-Shoot
+                    </label>
+                </div>
+                
+                <div>
+                    <label>Control Opacity: </label>
+                    <input type="range" id="control-opacity" min="0.1" max="1" step="0.1" value="0.7">
+                </div>
+                
+                <div>
+                    <label>Control Size: </label>
+                    <input type="range" id="control-size" min="0.5" max="1.5" step="0.1" value="1">
+                </div>
+                
+                <button id="close-settings">Close</button>
+            `;
+            
+            document.getElementById('game-container').appendChild(settingsPanel);
+            
+            // Toggle settings panel
+            settingsBtn.addEventListener('click', () => {
+                if (settingsPanel.style.display === 'none') {
+                    settingsPanel.style.display = 'block';
+                    gameRunning = false; // Pause game while in settings
+                } else {
+                    settingsPanel.style.display = 'none';
+                    gameRunning = true; // Resume game
+                }
+            });
+            
+            // Close settings button
+            document.getElementById('close-settings').addEventListener('click', () => {
+                settingsPanel.style.display = 'none';
+                gameRunning = true; // Resume game
+            });
+            
+            // Handle settings changes
+            document.getElementById('toggle-dpad').addEventListener('change', (e) => {
+                const dpad = document.querySelector('.d-pad');
+                dpad.style.display = e.target.checked ? 'block' : 'none';
+            });
+            
+            document.getElementById('toggle-swipe').addEventListener('change', (e) => {
+                swipeControlsEnabled = e.target.checked;
+            });
+            
+            document.getElementById('toggle-tap-shoot').addEventListener('change', (e) => {
+                tapToShootEnabled = e.target.checked;
+            });
+            
+            document.getElementById('control-opacity').addEventListener('input', (e) => {
+                const buttons = document.querySelectorAll('.touch-controls button');
+                buttons.forEach(btn => {
+                    btn.style.opacity = e.target.value;
+                });
+            });
+            
+            document.getElementById('control-size').addEventListener('input', (e) => {
+                const dpadButtons = document.querySelectorAll('.d-pad button');
+                const shootBtn = document.getElementById('shoot-btn');
+                const size = e.target.value;
+                
+                dpadButtons.forEach(btn => {
+                    btn.style.transform = `scale(${size})`;
+                });
+                
+                shootBtn.style.transform = `scale(${size})`;
+            });
+        }
+
+        // Main function to initialize all mobile optimizations
+        function initMobileOptimizations() {
+            if (isMobile || window.innerWidth < 800) {
+                // Setup touch controls
+                setupTouchControls();
+                
+                // Enhance touch controls
+                enhanceTouchControls();
+                
+                // Add swipe controls
+                addSwipeControls();
+                
+                // Add tap-to-shoot
+                addTapToShoot();
+                
+                // Add orientation controls
+                addOrientationControls();
+                
+                // Optimize performance
+                optimizeForMobile();
+                
+                // Add settings menu
+                addSettingsMenu();
+                
+                // Prevent default touch actions to avoid browser gestures
+                document.addEventListener('touchstart', (e) => {
+                    if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Handle screen orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Adjust canvas and controls based on orientation
+                    setTimeout(() => {
+                        const isLandscape = window.innerWidth > window.innerHeight;
+                        
+                        if (isLandscape) {
+                            // Optimize for landscape
+                            document.querySelector('.d-pad').style.bottom = '10px';
+                            document.getElementById('shoot-btn').style.bottom = '10px';
+                        } else {
+                            // Optimize for portrait
+                            document.querySelector('.d-pad').style.bottom = '20px';
+                            document.getElementById('shoot-btn').style.bottom = '30px';
+                        }
+                    }, 300); // Small delay to allow orientation to complete
+                });
+            }
+        }
     </script>
     <script>
         // Audio setup
@@ -204,6 +802,7 @@ function setupTouchControls() {
                 // Initialize audio on user interaction
                 document.addEventListener('click', () => this.initAudio(), { once: true });
                 document.addEventListener('keydown', () => this.initAudio(), { once: true });
+                document.addEventListener('touchstart', () => this.initAudio(), { once: true });
             }
             
             initAudio() {
@@ -1083,14 +1682,30 @@ function setupTouchControls() {
             // Initialize game
             initGame();
             
+            // Initialize mobile optimizations
+            initMobileOptimizations();
+            
             // Start game loop
             gameLoop();
+            
+            // Handle loading screen
+            loadingScreen.addEventListener('click', () => {
+                loadingScreen.style.display = 'none';
+                gameAudio.initAudio();
+            });
         });
 
         // Initialize game immediately if DOM is already loaded
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             initGame();
+            initMobileOptimizations();
             gameLoop();
+            
+            // Handle loading screen
+            loadingScreen.addEventListener('click', () => {
+                loadingScreen.style.display = 'none';
+                gameAudio.initAudio();
+            });
         }
     </script>
 </body>
