@@ -2,11 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ukrainian Combat Tank Always Wins</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <style>/* Mobile-specific styles */
+.touch-controls {
+    display: none;
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    z-index: 100;
+}
+
+.d-pad {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    width: 150px;
+    height: 150px;
+}
+
+.d-pad button {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 153, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#up-btn { top: 0; left: 50px; transform: translateX(-50%); }
+#down-btn { bottom: 0; left: 50px; transform: translateX(-50%); }
+#left-btn { left: 0; top: 50px; transform: translateY(-50%); }
+#right-btn { right: 0; top: 50px; transform: translateY(-50%); }
+
+#shoot-btn {
+    position: absolute;
+    right: 30px;
+    bottom: 30px;
+    width: 70px;
+    height: 70px;
+    background-color: rgba(204, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Media queries for responsive canvas */
+@media (max-width: 800px) {
+    canvas {
+        width: 100%;
+        height: auto;
+    }
+    
+    .touch-controls {
+        display: block;
+    }
+    
+    #controls-info {
+        display: none;
+    }
+}
+</style>
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
         <div id="victory-message" class="hidden">
@@ -84,6 +150,44 @@
         const restartButton = document.getElementById('restart-button');
         const scoreDisplay = document.getElementById('score');
         const livesDisplay = document.getElementById('lives');
+
+        // adding touch controls to replace keyboard input
+let touchStartX = 0;
+let touchStartY = 0;
+let isShooting = false;
+let moveDirection = null;
+let touchControls = document.createElement('div');
+
+function setupTouchControls() {
+    // Create touch control elements
+    touchControls.className = 'touch-controls';
+    touchControls.innerHTML = `
+        <div class="d-pad">
+            <button id="up-btn">↑</button>
+            <button id="left-btn">←</button>
+            <button id="right-btn">→</button>
+            <button id="down-btn">↓</button>
+        </div>
+        <button id="shoot-btn">FIRE</button>
+    `;
+    document.getElementById('game-container').appendChild(touchControls);
+    
+    // Add event listeners for touch buttons
+    document.getElementById('up-btn').addEventListener('touchstart', () => { keys.w = true; keys.arrowUp = true; });
+    document.getElementById('up-btn').addEventListener('touchend', () => { keys.w = false; keys.arrowUp = false; });
+    
+    document.getElementById('down-btn').addEventListener('touchstart', () => { keys.s = true; keys.arrowDown = true; });
+    document.getElementById('down-btn').addEventListener('touchend', () => { keys.s = false; keys.arrowDown = false; });
+    
+    document.getElementById('left-btn').addEventListener('touchstart', () => { keys.a = true; keys.arrowLeft = true; });
+    document.getElementById('left-btn').addEventListener('touchend', () => { keys.a = false; keys.arrowLeft = false; });
+    
+    document.getElementById('right-btn').addEventListener('touchstart', () => { keys.d = true; keys.arrowRight = true; });
+    document.getElementById('right-btn').addEventListener('touchend', () => { keys.d = false; keys.arrowRight = false; });
+    
+    document.getElementById('shoot-btn').addEventListener('touchstart', () => { keys.space = true; });
+    document.getElementById('shoot-btn').addEventListener('touchend', () => { keys.space = false; });
+}
     </script>
     <script>
         // Audio setup
