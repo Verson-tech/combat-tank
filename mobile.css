@@ -16,10 +16,11 @@
 /* D-pad styles */
 .d-pad {
     position: absolute;
-    left: 20px;
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center horizontally */
     bottom: 40px; /* Increased from 20px to move d-pad higher up */
-    width: 150px;
-    height: 150px;
+    width: 180px; /* Increased to accommodate center button */
+    height: 180px; /* Increased to accommodate center button */
 }
 
 .d-pad button {
@@ -63,21 +64,29 @@
     transform: translateY(-50%); 
 }
 
-/* Shoot button */
+/* Center fire button in d-pad */
 #shoot-btn {
     position: absolute;
-    right: 30px;
-    bottom: 50px; /* Increased from 30px to move shoot button higher up */
-    width: 80px;
-    height: 80px;
-    background-color: rgba(204, 0, 0, 0.7);
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background-color: rgba(204, 0, 0, 0.8);
     border: none;
     border-radius: 50%;
     color: white;
     font-size: 16px;
     font-weight: bold;
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
-    user-select: none; /* Prevent text selection */
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    z-index: 101; /* Ensure it's above other buttons */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+/* Remove the separate fire-button container since we're moving it to the d-pad center */
+.fire-button {
+    display: none;
+}
 }
 
 /* Fullscreen button */
@@ -185,13 +194,16 @@
     }
     
     .d-pad {
-        left: 10px;
+        left: 50%; /* Center horizontally */
+        transform: translateX(-50%); /* Center horizontally */
         bottom: 30px; /* Move d-pad up */
+        width: 180px;
+        height: 180px;
     }
     
+    /* Hide the separate fire button in landscape mode too */
     .fire-button {
-        right: 10px;
-        bottom: 30px; /* Move fire button up */
+        display: none;
     }
 }
         bottom: 10px;

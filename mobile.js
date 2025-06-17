@@ -54,20 +54,18 @@ function createTouchInterface(container) {
     const leftBtn = createButton('left-btn', '←');
     const rightBtn = createButton('right-btn', '→');
     
+    // Create shoot button in the center of the d-pad
+    const shootBtn = createButton('shoot-btn', 'FIRE');
+    
     // Add buttons to D-pad
     dpad.appendChild(upBtn);
     dpad.appendChild(downBtn);
     dpad.appendChild(leftBtn);
     dpad.appendChild(rightBtn);
+    dpad.appendChild(shootBtn); // Add shoot button to the d-pad
     
-    // Create shoot button
-    const shootBtn = document.createElement('button');
-    shootBtn.id = 'shoot-btn';
-    shootBtn.textContent = 'FIRE';
-    
-    // Add elements to container
+    // Add d-pad to container
     container.appendChild(dpad);
-    container.appendChild(shootBtn);
     
     // Add event listeners with proper touch handling
     setupButtonEventListeners();
