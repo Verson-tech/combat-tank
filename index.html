@@ -98,8 +98,9 @@
         const PLAYER_SPEED = 4;
         const ENEMY_SPEED = 2;
         const ENEMY_SHOOT_CHANCE = 0.01;
-        let MAX_ENEMIES = 5;
+        let MAX_ENEMIES = 3; // Maximum enemies on screen at once
         let TOTAL_ENEMIES_TO_DEFEAT = 10; // Total number of enemies to defeat for victory
+        let TOTAL_ENEMIES_SPAWNED = 0; // Track how many enemies have been spawned
 
         // Colors
         const COLORS = {
@@ -136,6 +137,7 @@
         let score = 0;
         let lives = 3;
         let enemiesDefeated = 0;
+        let totalEnemiesSpawned = 0;
 
         // DOM elements
         const victoryMessage = document.getElementById('victory-message');
@@ -703,6 +705,7 @@
             score = 0;
             lives = 3;
             enemiesDefeated = 0;
+            totalEnemiesSpawned = 0;
             
             // Update HUD
             updateHUD();
@@ -757,7 +760,8 @@
 
         // Spawn enemy
         function spawnEnemy() {
-            if (enemies.length < MAX_ENEMIES) {
+            // Only spawn if we haven't reached the total number of enemies to defeat
+            if (enemies.length < MAX_ENEMIES && totalEnemiesSpawned < TOTAL_ENEMIES_TO_DEFEAT) {
                 const spawnPoints = [
                     { x: GRID_SIZE, y: GRID_SIZE },
                     { x: canvas.width - GRID_SIZE * 2, y: GRID_SIZE },
@@ -766,6 +770,7 @@
                 
                 const spawnPoint = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
                 enemies.push(new Tank(spawnPoint.x, spawnPoint.y, "down"));
+                totalEnemiesSpawned++;
             }
         }
 
@@ -920,8 +925,22 @@
                                 }
                                 
                                 // Check if player has defeated enough enemies
-                                if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT) {
-                                    declareVictory();
+                                if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT && totalEnemiesSpawned >= TOTAL_ENEMIES_TO_DEFEAT) {
+                                    // Make sure no enemies are left on screen
+                                    if (enemies.length > 0) {
+                                        // Mark all remaining enemies as defeated
+                                        for (const enemy of enemies) {
+                                            enemy.defeated = true;
+                                        }
+                                        
+                                        // Clear the enemies array after a short delay
+                                        setTimeout(() => {
+                                            enemies = [];
+                                            declareVictory();
+                                        }, 500);
+                                    } else {
+                                        declareVictory();
+                                    }
                                 }
                             }, 500);
                             
@@ -947,9 +966,23 @@
         function checkVictory() {
             if (gameOver) return;
             
-            // If player has defeated enough enemies
-            if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT) {
-                declareVictory();
+            // If player has defeated all enemies (all 10 enemies)
+            if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT && totalEnemiesSpawned >= TOTAL_ENEMIES_TO_DEFEAT) {
+                // Make sure no enemies are left on screen
+                if (enemies.length > 0) {
+                    // Mark all remaining enemies as defeated
+                    for (const enemy of enemies) {
+                        enemy.defeated = true;
+                    }
+                    
+                    // Clear the enemies array after a short delay
+                    setTimeout(() => {
+                        enemies = [];
+                        declareVictory();
+                    }, 500);
+                } else {
+                    declareVictory();
+                }
             }
         }
         
@@ -988,7 +1021,7 @@
 
         // Update HUD
         function updateHUD() {
-            scoreDisplay.textContent = `Score: ${score} (Enemies Defeated: ${enemiesDefeated}/${TOTAL_ENEMIES_TO_DEFEAT})`;
+            scoreDisplay.textContent = `Score: ${score} (Enemies: ${enemiesDefeated}/${TOTAL_ENEMIES_TO_DEFEAT})`;
             livesDisplay.textContent = `Lives: ${lives}`;
         }
     </script>
@@ -1056,7 +1089,7 @@
             checkVictory();
             
             // Spawn enemies
-            if (Math.random() < 0.01 && enemies.length < MAX_ENEMIES && gameRunning && !gameOver) {
+            if (Math.random() < 0.01 && enemies.length < MAX_ENEMIES && totalEnemiesSpawned < TOTAL_ENEMIES_TO_DEFEAT && gameRunning && !gameOver) {
                 spawnEnemy();
             }
             
