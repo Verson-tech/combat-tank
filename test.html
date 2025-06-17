@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Test</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+        
+        #victory-message, #game-over-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .message-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        #victory-message .message-text {
+            color: #ffdd00; /* Ukrainian flag yellow */
+        }
+        
+        #game-over-message .message-text {
+            color: #ff4444; /* Red for game over */
+        }
+        
+        button {
+            background-color: #0057b7; /* Ukrainian flag blue */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        #restart-button-gameover {
+            background-color: #cc0000; /* Red for game over */
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="victory-message">
+            <div class="message-text">It's a win🇺🇦🇺🇦🇺🇦</div>
+            <button id="restart-button">Play Again</button>
+        </div>
+        
+        <div id="game-over-message" class="hidden">
+            <div class="message-text">Game over💥</div>
+            <button id="restart-button-gameover">Play Again</button>
+        </div>
+        
+        <div id="controls">
+            <button id="show-victory">Show Victory Message</button>
+            <button id="show-game-over">Show Game Over Message</button>
+            <button id="hide-all">Hide All Messages</button>
+        </div>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const victoryMessage = document.getElementById('victory-message');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const showVictoryBtn = document.getElementById('show-victory');
+        const showGameOverBtn = document.getElementById('show-game-over');
+        const hideAllBtn = document.getElementById('hide-all');
+        const restartButton = document.getElementById('restart-button');
+        const restartButtonGameover = document.getElementById('restart-button-gameover');
+        
+        // Show victory message
+        showVictoryBtn.addEventListener('click', () => {
+            victoryMessage.classList.remove('hidden');
+            gameOverMessage.classList.add('hidden');
+            console.log('Victory message shown');
+        });
+        
+        // Show game over message
+        showGameOverBtn.addEventListener('click', () => {
+            gameOverMessage.classList.remove('hidden');
+            victoryMessage.classList.add('hidden');
+            console.log('Game over message shown');
+        });
+        
+        // Hide all messages
+        hideAllBtn.addEventListener('click', () => {
+            victoryMessage.classList.add('hidden');
+            gameOverMessage.classList.add('hidden');
+            console.log('All messages hidden');
+        });
+        
+        // Restart buttons
+        restartButton.addEventListener('click', () => {
+            victoryMessage.classList.add('hidden');
+            console.log('Victory message hidden');
+        });
+        
+        restartButtonGameover.addEventListener('click', () => {
+            gameOverMessage.classList.add('hidden');
+            console.log('Game over message hidden');
+        });
+    </script>
+</body>
+</html>

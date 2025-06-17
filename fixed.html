@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ukrainian Combat Tank Always Wins</title>
+    <style>
+        .hidden {
+            display: none !important;
+        }
+        
+        #victory-message, #game-over-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .message-text {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        #victory-message .message-text {
+            color: #ffdd00; /* Ukrainian flag yellow */
+        }
+        
+        #game-over-message .message-text {
+            color: #ff4444; /* Red for game over */
+        }
+        
+        #restart-button, #restart-button-gameover {
+            background-color: #0057b7; /* Ukrainian flag blue */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #restart-button-gameover {
+            background-color: #cc0000; /* Red for game over */
+        }
+        
+        /* Debug buttons */
+        #debug-controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+        }
+        
+        #debug-controls button {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- Victory Message -->
+        <div id="victory-message" class="hidden">
+            <div class="message-text">It's a win🇺🇦🇺🇦🇺🇦</div>
+            <button id="restart-button">Play Again</button>
+        </div>
+        
+        <!-- Game Over Message -->
+        <div id="game-over-message" class="hidden">
+            <div class="message-text">Game over💥</div>
+            <button id="restart-button-gameover">Play Again</button>
+        </div>
+        
+        <div id="hud">
+            <div id="score">Score: 0</div>
+            <div id="lives">Lives: 3</div>
+        </div>
+        <div id="controls-info">
+            Use WASD or Arrow keys to move and SPACE to shoot
+        </div>
+    </div>
+    
+    <!-- Debug Controls -->
+    <div id="debug-controls">
+        <button id="test-victory">Test Victory</button>
+        <button id="test-game-over">Test Game Over</button>
+        <button id="reset-game">Reset Game</button>
+    </div>
+    
+    <!-- Loading screen -->
+    <div id="loading-screen">
+        <h2>Ukrainian Combat Tank</h2>
+        <p>Loading game...</p>
+        <p>Tap to start</p>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const victoryMessage = document.getElementById('victory-message');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const restartButton = document.getElementById('restart-button');
+        const restartButtonGameover = document.getElementById('restart-button-gameover');
+        const testVictoryBtn = document.getElementById('test-victory');
+        const testGameOverBtn = document.getElementById('test-game-over');
+        const resetGameBtn = document.getElementById('reset-game');
+        
+        // Test victory message
+        testVictoryBtn.addEventListener('click', () => {
+            showVictoryMessage();
+        });
+        
+        // Test game over message
+        testGameOverBtn.addEventListener('click', () => {
+            showGameOverMessage();
+        });
+        
+        // Reset game
+        resetGameBtn.addEventListener('click', () => {
+            hideAllMessages();
+        });
+        
+        // Restart buttons
+        restartButton.addEventListener('click', () => {
+            hideAllMessages();
+        });
+        
+        restartButtonGameover.addEventListener('click', () => {
+            hideAllMessages();
+        });
+        
+        // Show victory message
+        function showVictoryMessage() {
+            victoryMessage.classList.remove('hidden');
+            gameOverMessage.classList.add('hidden');
+            console.log('Victory message shown');
+        }
+        
+        // Show game over message
+        function showGameOverMessage() {
+            gameOverMessage.classList.remove('hidden');
+            victoryMessage.classList.add('hidden');
+            console.log('Game over message shown');
+        }
+        
+        // Hide all messages
+        function hideAllMessages() {
+            victoryMessage.classList.add('hidden');
+            gameOverMessage.classList.add('hidden');
+            console.log('All messages hidden');
+        }
+    </script>
+</body>
+</html>

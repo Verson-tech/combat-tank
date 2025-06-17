@@ -6,7 +6,7 @@
     <title>Ukrainian Combat Tank Always Wins</title>
     <style>
         .hidden {
-            display: none !important;
+            display: none;
         }
         
         #victory-message, #game-over-message {
@@ -80,6 +80,23 @@
         <p>Tap to start</p>
     </div>
 
+    <script>
+        // Wait for the DOM to be fully loaded before accessing elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if the victory and game over messages exist
+            const victoryMessage = document.getElementById('victory-message');
+            const gameOverMessage = document.getElementById('game-over-message');
+            
+            if (!victoryMessage) {
+                console.error("Victory message element not found in DOM!");
+            }
+            
+            if (!gameOverMessage) {
+                console.error("Game over message element not found in DOM!");
+            }
+        });
+    </script>
+
     <script src="mobile.js"></script>
     <script>
         // Canvas setup
@@ -99,7 +116,6 @@
         const ENEMY_SPEED = 2;
         const ENEMY_SHOOT_CHANCE = 0.01;
         let MAX_ENEMIES = 5;
-        let TOTAL_ENEMIES_TO_DEFEAT = 10; // Total number of enemies to defeat for victory
 
         // Colors
         const COLORS = {
@@ -135,7 +151,6 @@
         let victory = false;
         let score = 0;
         let lives = 3;
-        let enemiesDefeated = 0;
 
         // DOM elements
         const victoryMessage = document.getElementById('victory-message');
@@ -145,6 +160,9 @@
         const scoreDisplay = document.getElementById('score');
         const livesDisplay = document.getElementById('lives');
         const loadingScreen = document.getElementById('loading-screen');
+        
+        console.log("Victory message element:", victoryMessage);
+        console.log("Game over message element:", gameOverMessage);
     </script>
     </script>
     <script>
@@ -702,14 +720,13 @@
             victory = false;
             score = 0;
             lives = 3;
-            enemiesDefeated = 0;
             
             // Update HUD
             updateHUD();
             
             // Hide messages
-            victoryMessage.classList.add('hidden');
-            gameOverMessage.classList.add('hidden');
+            if (victoryMessage) victoryMessage.classList.add('hidden');
+            if (gameOverMessage) gameOverMessage.classList.add('hidden');
         }
 
         // Initialize walls
@@ -861,7 +878,8 @@
                 if (checkCollision(bullet.rect, base.rect)) {
                     if (!bullet.isPlayer) {
                         // Game over if enemy hits the base
-                        declareGameOver();
+                        console.log("Enemy hit the base - Victory!");
+                        declareVictory();  // Ukrainian tank wins when base is hit!
                     }
                     
                     explosions.push(new Explosion(bullet.x, bullet.y));
@@ -880,8 +898,11 @@
                     lives--;
                     updateHUD();
                     
+                    console.log("Player hit! Lives: " + lives);
+                    
                     if (lives <= 0) {
                         // Player has lost all lives - Game Over
+                        console.log("No lives left - Game Over");
                         declareGameOver();
                     } else {
                         // Reset player position
@@ -908,22 +929,8 @@
                             bullets.splice(i, 1);
                             
                             // Increase score
-                            score += 10;
-                            enemiesDefeated++;
+                            score += 100;
                             updateHUD();
-                            
-                            // Remove enemy after a delay
-                            setTimeout(() => {
-                                const index = enemies.indexOf(enemy);
-                                if (index > -1) {
-                                    enemies.splice(index, 1);
-                                }
-                                
-                                // Check if player has defeated enough enemies
-                                if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT) {
-                                    declareVictory();
-                                }
-                            }, 500);
                             
                             break;
                         }
@@ -943,21 +950,13 @@
         }
 
         // Declare victory
-        // Check if all enemies are defeated
-        function checkVictory() {
-            if (gameOver) return;
-            
-            // If player has defeated enough enemies
-            if (enemiesDefeated >= TOTAL_ENEMIES_TO_DEFEAT) {
-                declareVictory();
-            }
-        }
-        
-        // Declare victory (when player destroys all enemies)
+        // Declare victory
         function declareVictory() {
             gameRunning = false;
             gameOver = true;
             victory = true;
+            
+            console.log("Victory declared!");
             
             // Mark all enemies as defeated
             for (const enemy of enemies) {
@@ -965,22 +964,32 @@
             }
             
             // Show victory message
-            victoryMessage.classList.remove('hidden');
-            gameOverMessage.classList.add('hidden');
+            if (victoryMessage) {
+                victoryMessage.classList.remove('hidden');
+                console.log("Victory message should be visible now");
+            } else {
+                console.error("Victory message element not found!");
+            }
             
             // Play victory sound
             gameAudio.playSound('victory');
         }
         
-        // Declare game over (when player loses all lives or base is destroyed)
+        // Declare game over
         function declareGameOver() {
             gameRunning = false;
             gameOver = true;
             victory = false;
             
+            console.log("Game over declared!");
+            
             // Show game over message
-            gameOverMessage.classList.remove('hidden');
-            victoryMessage.classList.add('hidden');
+            if (gameOverMessage) {
+                gameOverMessage.classList.remove('hidden');
+                console.log("Game over message should be visible now");
+            } else {
+                console.error("Game over message element not found!");
+            }
             
             // Play explosion sound
             gameAudio.playSound('explosion');
@@ -988,7 +997,7 @@
 
         // Update HUD
         function updateHUD() {
-            scoreDisplay.textContent = `Score: ${score} (Enemies Defeated: ${enemiesDefeated}/${TOTAL_ENEMIES_TO_DEFEAT})`;
+            scoreDisplay.textContent = `Score: ${score}`;
             livesDisplay.textContent = `Lives: ${lives}`;
         }
     </script>
@@ -1030,13 +1039,25 @@
         });
 
         // Restart button event listeners
-        restartButton.addEventListener('click', () => {
-            initGame();
-        });
+        if (restartButton) {
+            restartButton.addEventListener('click', () => {
+                console.log("Victory restart button clicked");
+                initGame();
+                victoryMessage.classList.add('hidden');
+            });
+        } else {
+            console.error("Restart button element not found!");
+        }
         
-        restartButtonGameover.addEventListener('click', () => {
-            initGame();
-        });
+        if (restartButtonGameover) {
+            restartButtonGameover.addEventListener('click', () => {
+                console.log("Game over restart button clicked");
+                initGame();
+                gameOverMessage.classList.add('hidden');
+            });
+        } else {
+            console.error("Game over restart button element not found!");
+        }
 
         // Game loop
         function gameLoop() {
@@ -1052,11 +1073,8 @@
             updateBullets();
             updateExplosions();
             
-            // Check for victory condition
-            checkVictory();
-            
             // Spawn enemies
-            if (Math.random() < 0.01 && enemies.length < MAX_ENEMIES && gameRunning && !gameOver) {
+            if (Math.random() < 0.01 && enemies.length < MAX_ENEMIES && gameRunning) {
                 spawnEnemy();
             }
             
@@ -1100,6 +1118,10 @@
                     window.gameAudio.initAudio();
                 }
             });
+            
+            // Log message elements again after DOM is fully loaded
+            console.log("After DOM loaded - Victory message element:", document.getElementById('victory-message'));
+            console.log("After DOM loaded - Game over message element:", document.getElementById('game-over-message'));
         });
 
         // Initialize game immediately if DOM is already loaded
