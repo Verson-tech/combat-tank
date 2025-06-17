@@ -50,6 +50,34 @@
             background-color: #cc0000; /* Red for game over */
         }
         
+        /* Game container and canvas styling */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Limit maximum width */
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 4/3; /* Maintain aspect ratio */
+            background-color: #000;
+        }
+        
         /* HUD styling */
         #hud {
             display: flex;
@@ -76,6 +104,15 @@
         #lives {
             color: #0057b7; /* Ukrainian flag blue */
         }
+        
+        /* Controls info */
+        #controls-info {
+            text-align: center;
+            color: white;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
     </style>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile.css">
@@ -1160,7 +1197,28 @@
                     window.gameAudio.initAudio();
                 }
             });
+            
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial call to set correct size
         });
+        
+        // Handle window resize
+        function handleResize() {
+            // Only adjust for desktop (mobile is handled by CSS)
+            if (window.innerWidth > 800) {
+                const gameContainer = document.getElementById('game-container');
+                const containerWidth = gameContainer.clientWidth;
+                
+                // Maintain aspect ratio
+                const aspectRatio = 4/3;
+                const calculatedHeight = containerWidth / aspectRatio;
+                
+                // Update canvas style
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = calculatedHeight + 'px';
+            }
+        }
 
         // Initialize game immediately if DOM is already loaded
         if (document.readyState === 'complete' || document.readyState === 'interactive') {

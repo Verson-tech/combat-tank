@@ -169,7 +169,7 @@ function addFullscreenButton() {
     fullscreenBtn.id = 'fullscreen-btn';
     fullscreenBtn.textContent = 'Fullscreen';
     fullscreenBtn.style.position = 'absolute';
-    fullscreenBtn.style.top = '10px';
+    fullscreenBtn.style.top = '40px'; // Move down below the HUD
     fullscreenBtn.style.right = '10px';
     fullscreenBtn.style.zIndex = '102';
     fullscreenBtn.style.background = 'rgba(0,0,0,0.5)';
