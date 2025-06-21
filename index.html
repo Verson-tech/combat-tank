@@ -227,6 +227,13 @@
                 gap: 8px;
             }
             
+            #gameCanvas {
+                height: auto !important; /* Override fixed height on mobile */
+                max-height: 60vh !important; /* Limit height to 60% of viewport */
+                aspect-ratio: 4/3 !important; /* Maintain proper aspect ratio */
+                width: 100% !important;
+            }
+            
             .toggle-btn {
                 font-size: 11px;
                 padding: 4px 6px;
@@ -1662,8 +1669,8 @@
         
         // Handle window resize
         function handleResize() {
-            // Only adjust for desktop (mobile is handled by CSS)
-            if (window.innerWidth > 800) {
+            if (window.innerWidth > 768) {
+                // Desktop: Use fixed dimensions
                 const gameContainer = document.getElementById('game-container');
                 const containerWidth = gameContainer.clientWidth;
                 
@@ -1674,9 +1681,11 @@
                 canvas.style.width = Math.min(containerWidth, 800) + 'px';
                 canvas.style.height = fixedHeight + 'px';
             } else {
-                // Reset styles for mobile (let CSS handle it)
-                canvas.style.width = '';
-                canvas.style.height = '';
+                // Mobile: Use responsive sizing with proper aspect ratio
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
+                canvas.style.maxHeight = '60vh';
+                canvas.style.aspectRatio = '4/3';
             }
         }
 
