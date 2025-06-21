@@ -54,8 +54,8 @@ function createTouchInterface(container) {
     const leftBtn = createButton('left-btn', '←');
     const rightBtn = createButton('right-btn', '→');
     
-    // Create shoot button in the center of the d-pad
-    const shootBtn = createButton('shoot-btn', 'FIRE');
+    // Create shoot button in the center of the d-pad with Ukrainian text
+    const shootBtn = createButton('shoot-btn', 'Вогонь');
     
     // Add buttons to D-pad
     dpad.appendChild(upBtn);
