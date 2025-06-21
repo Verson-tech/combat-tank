@@ -228,9 +228,9 @@
             }
             
             #gameCanvas {
-                height: auto !important; /* Override fixed height on mobile */
-                max-height: 60vh !important; /* Limit height to 60% of viewport */
-                aspect-ratio: 4/3 !important; /* Maintain proper aspect ratio */
+                height: auto !important;
+                max-height: 60vh !important;
+                aspect-ratio: 4/3 !important;
                 width: 100% !important;
             }
             
@@ -515,24 +515,30 @@
             }
         }
         
-        // Run canvas test immediately
-        if (testCanvas()) {
-            console.log('Initial canvas test passed');
-        } else {
-            console.error('Initial canvas test failed');
-        }
+        // Run canvas test immediately - this should show colored squares right away
+        setTimeout(() => {
+            if (testCanvas()) {
+                console.log('Initial canvas test passed - you should see colored squares');
+            } else {
+                console.error('Initial canvas test failed - canvas not working');
+            }
+        }, 100);
 
-        // Game constants - mobile responsive speeds
+        // Game constants - fixed values that work
         const GRID_SIZE = 40;
         const TANK_SIZE = 35;
         const BULLET_SIZE = 8;
-        const BULLET_SPEED = window.innerWidth <= 768 ? 4 : 7; // Slower on mobile
-        const PLAYER_SPEED = window.innerWidth <= 768 ? 2 : 4; // Slower on mobile
-        const ENEMY_SPEED = window.innerWidth <= 768 ? 1 : 2; // Slower on mobile
+        const BULLET_SPEED = 7;
+        const PLAYER_SPEED = 4;
+        const ENEMY_SPEED = 2;
         const ENEMY_SHOOT_CHANCE = 0.01;
-        let MAX_ENEMIES = 3; // Maximum enemies on screen at once
-        let TOTAL_ENEMIES_TO_DEFEAT = 10; // Total number of enemies to defeat for victory
-        let TOTAL_ENEMIES_SPAWNED = 0; // Track how many enemies have been spawned
+        let MAX_ENEMIES = 3;
+        let TOTAL_ENEMIES_TO_DEFEAT = 10;
+        let TOTAL_ENEMIES_SPAWNED = 0;
+        
+        // Mobile speed multipliers (applied during movement, not to constants)
+        // Note: isMobile is declared in mobile.js
+        const mobileSpeedMultiplier = (typeof isMobile !== 'undefined' && isMobile) ? 0.5 : 1.0; // Half speed on mobile
 
         // Colors
         const COLORS = {
@@ -784,8 +790,12 @@
             }
             
             move(dx, dy, walls, base, tanks) {
-                const newX = this.x + dx;
-                const newY = this.y + dy;
+                // Apply mobile speed multiplier
+                const adjustedDx = dx * mobileSpeedMultiplier;
+                const adjustedDy = dy * mobileSpeedMultiplier;
+                
+                const newX = this.x + adjustedDx;
+                const newY = this.y + adjustedDy;
                 
                 // Update direction based on movement
                 if (dx > 0) this.direction = "right";
@@ -953,10 +963,11 @@
             }
             
             update() {
-                if (this.direction === "up") this.y -= BULLET_SPEED;
-                else if (this.direction === "right") this.x += BULLET_SPEED;
-                else if (this.direction === "down") this.y += BULLET_SPEED;
-                else if (this.direction === "left") this.x -= BULLET_SPEED;
+                const speed = BULLET_SPEED * mobileSpeedMultiplier;
+                if (this.direction === "up") this.y -= speed;
+                else if (this.direction === "right") this.x += speed;
+                else if (this.direction === "down") this.y += speed;
+                else if (this.direction === "left") this.x -= speed;
             }
             
             draw() {
@@ -1120,21 +1131,8 @@
         let explosions = [];
         let base;
 
-        // Initialize game objects
+        // Initialize game objects - simplified
         function initGame() {
-            // Ensure canvas dimensions are set correctly for mobile
-            if (window.innerWidth <= 768) {
-                // Mobile: Set canvas internal dimensions based on display size
-                const displayWidth = canvas.clientWidth;
-                const displayHeight = canvas.clientHeight;
-                
-                if (displayWidth && displayHeight) {
-                    canvas.width = displayWidth;
-                    canvas.height = displayHeight;
-                    console.log('Mobile canvas dimensions set to:', canvas.width, 'x', canvas.height);
-                }
-            }
-            
             // Create player
             player = new Tank(
                 canvas.width / 2 - TANK_SIZE / 2,
@@ -1560,13 +1558,13 @@
         }
 
         // Restart button event listeners
-        restartButton.addEventListener('click', () => {
-            initGame();
-        });
+        // restartButton.addEventListener('click', () => {
+        //     initGame();
+        // });
         
-        restartButtonGameover.addEventListener('click', () => {
-            initGame();
-        });
+        // restartButtonGameover.addEventListener('click', () => {
+        //     initGame();
+        // });
 
         // Fullscreen toggle
         fullscreenBtn.addEventListener('click', () => {
@@ -1621,28 +1619,15 @@
             }
         });
 
-        // Game loop with mobile frame rate control
-        let lastFrameTime = 0;
-        const targetFPS = window.innerWidth <= 768 ? 30 : 60; // Lower FPS on mobile
-        const frameInterval = 1000 / targetFPS;
-        
-        function gameLoop(currentTime = 0) {
-            // Frame rate limiting for consistent speed
-            if (currentTime - lastFrameTime < frameInterval) {
-                requestAnimationFrame(gameLoop);
-                return;
-            }
-            lastFrameTime = currentTime;
-            
+        // Game loop - simplified and working
+        function gameLoop() {
             // Debug: Log canvas dimensions on first run
             if (!gameLoop.debugLogged) {
+                console.log('Mobile detected:', isMobile);
                 console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
                 console.log('Canvas style:', canvas.style.width, 'x', canvas.style.height);
                 console.log('Canvas client size:', canvas.clientWidth, 'x', canvas.clientHeight);
-                console.log('Player position:', player ? player.x + ',' + player.y : 'not created');
-                console.log('Base position:', base ? base.x + ',' + base.y : 'not created');
-                console.log('Walls count:', walls ? walls.length : 'not created');
-                console.log('Target FPS:', targetFPS);
+                console.log('Speed multiplier:', mobileSpeedMultiplier);
                 gameLoop.debugLogged = true;
             }
             
@@ -1660,10 +1645,6 @@
                 console.error('Failed to clear canvas:', error);
                 return;
             }
-            
-            // Draw a test rectangle to verify canvas is working (remove after debugging)
-            ctx.fillStyle = '#ff0000';
-            ctx.fillRect(10, 10, 50, 50);
             
             // If game is paused, only draw static elements and show pause message
             if (gamePaused) {
@@ -1774,68 +1755,28 @@
 
         // Initialize game when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
-            // Android-specific initialization
-            if (navigator.userAgent.includes('Android')) {
-                console.log('Android device detected, applying fixes...');
-                
-                // Prevent zoom on double tap
-                document.addEventListener('touchstart', function(e) {
-                    if (e.touches.length > 1) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
-                
-                // Prevent default touch behaviors
-                document.addEventListener('touchmove', function(e) {
-                    e.preventDefault();
-                }, { passive: false });
-            }
+            console.log('DOM loaded, initializing game...');
             
-            // Show loading screen first
-            loadingScreen.style.display = 'flex';
+            // Show loading screen immediately
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+                console.log('Loading screen displayed');
+            }
             
             // Handle loading screen click to start game
             loadingScreen.addEventListener('click', () => {
+                console.log('Loading screen clicked, starting game...');
                 loadingScreen.style.display = 'none';
                 
-                // Mobile-specific canvas setup
-                if (window.innerWidth <= 768) {
-                    console.log('Setting up mobile canvas...');
-                    
-                    // Force canvas to match its display size
-                    const rect = canvas.getBoundingClientRect();
-                    canvas.width = rect.width;
-                    canvas.height = rect.height;
-                    
-                    console.log('Mobile canvas setup complete:', canvas.width, 'x', canvas.height);
-                    
-                    // Test canvas immediately on mobile
-                    ctx.fillStyle = '#00ff00';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#ff0000';
-                    ctx.fillRect(50, 50, 100, 100);
-                    
-                    // Wait a moment then initialize game
-                    setTimeout(() => {
-                        try {
-                            initGame();
-                            gameLoop();
-                            console.log('Mobile game initialized successfully');
-                        } catch (error) {
-                            console.error('Mobile game initialization failed:', error);
-                            alert('Game failed to start on mobile: ' + error.message);
-                        }
-                    }, 500);
-                } else {
-                    // Desktop initialization
-                    try {
-                        initGame();
-                        gameLoop();
-                        console.log('Desktop game initialized successfully');
-                    } catch (error) {
-                        console.error('Desktop game initialization failed:', error);
-                        alert('Game failed to start: ' + error.message);
-                    }
+                // Initialize game
+                try {
+                    initGame();
+                    console.log('Game objects initialized');
+                    gameLoop();
+                    console.log('Game loop started');
+                } catch (error) {
+                    console.error('Game initialization failed:', error);
+                    alert('Game failed to start: ' + error.message);
                 }
                 
                 // Initialize audio
@@ -1844,55 +1785,139 @@
                 }
             });
             
+            // Initialize button event listeners
+            if (pauseBtn) {
+                pauseBtn.addEventListener('click', () => {
+                    gamePaused = !gamePaused;
+                    pauseBtn.innerHTML = gamePaused ? '<span>▶️</span> Resume' : '<span>⏸️</span> Pause';
+                    pauseBtn.classList.toggle('paused', gamePaused);
+                });
+            }
+            
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().then(() => {
+                            fullscreenBtn.classList.add('active');
+                            fullscreenBtn.innerHTML = '<span>🔲</span> Exit Fullscreen';
+                        }).catch(err => {
+                            console.log('Error attempting to enable fullscreen:', err);
+                        });
+                    } else {
+                        document.exitFullscreen().then(() => {
+                            fullscreenBtn.classList.remove('active');
+                            fullscreenBtn.innerHTML = '<span>🔳</span> Fullscreen';
+                        }).catch(err => {
+                            console.log('Error attempting to exit fullscreen:', err);
+                        });
+                    }
+                });
+            }
+            
+            // Restart button event listeners
+            if (restartButton) {
+                restartButton.addEventListener('click', () => {
+                    initGame();
+                });
+            }
+            
+            if (restartButtonGameover) {
+                restartButtonGameover.addEventListener('click', () => {
+                    initGame();
+                });
+            }
+            
             // Handle window resize
             window.addEventListener('resize', handleResize);
             window.addEventListener('orientationchange', () => {
-                setTimeout(handleResize, 500); // Delay for orientation change
+                setTimeout(handleResize, 500);
             });
             handleResize(); // Initial call to set correct size
         });
-        
-        // Handle window resize with Android compatibility
-        function handleResize() {
-            // Force canvas redraw after resize
-            setTimeout(() => {
-                if (window.innerWidth > 768) {
-                    // Desktop: Use fixed dimensions
-                    const gameContainer = document.getElementById('game-container');
-                    const containerWidth = gameContainer.clientWidth;
-                    
-                    // Use fixed height to prevent HUD overlap
-                    const fixedHeight = 520; // Match our canvas.height
-                    
-                    // Update canvas style with fixed dimensions
-                    canvas.style.width = Math.min(containerWidth, 800) + 'px';
-                    canvas.style.height = fixedHeight + 'px';
-                } else {
-                    // Mobile: Use responsive sizing with proper aspect ratio
-                    canvas.style.width = '100%';
-                    canvas.style.height = 'auto';
-                    canvas.style.maxHeight = '60vh';
-                    canvas.style.aspectRatio = '4/3';
-                    
-                    // Android-specific fixes
-                    if (navigator.userAgent.includes('Android')) {
-                        // Force canvas dimensions for Android
-                        const containerWidth = canvas.parentElement.clientWidth;
-                        const calculatedHeight = Math.min(containerWidth * 0.75, window.innerHeight * 0.6);
-                        canvas.style.width = containerWidth + 'px';
-                        canvas.style.height = calculatedHeight + 'px';
-                        
-                        // Ensure canvas internal dimensions match display size
-                        canvas.width = containerWidth;
-                        canvas.height = calculatedHeight;
-                    }
+
+        // Initialize immediately if DOM is already loaded
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            console.log('DOM already loaded, initializing immediately...');
+            
+            // Show loading screen immediately
+            if (loadingScreen) {
+                loadingScreen.style.display = 'flex';
+                console.log('Loading screen displayed immediately');
+            }
+            
+            // Handle loading screen click to start game
+            loadingScreen.addEventListener('click', () => {
+                console.log('Loading screen clicked, starting game...');
+                loadingScreen.style.display = 'none';
+                
+                // Initialize game
+                try {
+                    initGame();
+                    console.log('Game objects initialized');
+                    gameLoop();
+                    console.log('Game loop started');
+                } catch (error) {
+                    console.error('Game initialization failed:', error);
+                    alert('Game failed to start: ' + error.message);
                 }
                 
-                // Force a redraw
-                if (typeof gameLoop === 'function') {
-                    requestAnimationFrame(gameLoop);
+                // Initialize audio
+                if (window.gameAudio && typeof window.gameAudio.initAudio === 'function') {
+                    window.gameAudio.initAudio();
                 }
-            }, 100);
+            });
+            
+            // Initialize button event listeners
+            if (pauseBtn) {
+                pauseBtn.addEventListener('click', () => {
+                    gamePaused = !gamePaused;
+                    pauseBtn.innerHTML = gamePaused ? '<span>▶️</span> Resume' : '<span>⏸️</span> Pause';
+                    pauseBtn.classList.toggle('paused', gamePaused);
+                });
+            }
+            
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().then(() => {
+                            fullscreenBtn.classList.add('active');
+                            fullscreenBtn.innerHTML = '<span>🔲</span> Exit Fullscreen';
+                        }).catch(err => {
+                            console.log('Error attempting to enable fullscreen:', err);
+                        });
+                    } else {
+                        document.exitFullscreen().then(() => {
+                            fullscreenBtn.classList.remove('active');
+                            fullscreenBtn.innerHTML = '<span>🔳</span> Fullscreen';
+                        }).catch(err => {
+                            console.log('Error attempting to exit fullscreen:', err);
+                        });
+                    }
+                });
+            }
+            
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+            handleResize(); // Initial call to set correct size
+        }
+        
+        // Handle window resize - simplified
+        function handleResize() {
+            if (window.innerWidth > 768) {
+                // Desktop: Use fixed dimensions
+                const gameContainer = document.getElementById('game-container');
+                const containerWidth = gameContainer.clientWidth;
+                const fixedHeight = 520;
+                
+                canvas.style.width = Math.min(containerWidth, 800) + 'px';
+                canvas.style.height = fixedHeight + 'px';
+            } else {
+                // Mobile: Use responsive sizing
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
+                canvas.style.maxHeight = '60vh';
+                canvas.style.aspectRatio = '4/3';
+            }
         }
 
         // Initialize game immediately if DOM is already loaded
