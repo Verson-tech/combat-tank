@@ -33,6 +33,33 @@ I selected this project for several compelling reasons:
 
 The game is fully playable at: https://verson-tech.github.io/combat-tank/
 
+<div align="center">
+
+## 🎮 Game Controls
+
+### Desktop Controls
+<table>
+<tr>
+<td align="center">
+<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>
+<strong>Movement</strong>
+</td>
+<td align="center">
+<kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><br>
+<strong>Arrow Keys</strong>
+</td>
+<td align="center">
+<kbd>Space</kbd><br>
+<strong>Fire</strong>
+</td>
+</tr>
+</table>
+
+### Mobile Controls
+📱 **Touch Controls Available** - Virtual D-pad and fire button
+
+</div>
+
 ## Effective Prompting Techniques Discovered
 
 Through this development process, I discovered several highly effective prompting strategies when working with AI:

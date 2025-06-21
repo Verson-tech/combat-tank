@@ -93,7 +93,7 @@
             margin-top: -3px; /* Reduce space between canvas and HUD */
         }
         
-        #score, #lives {
+        #score, #lives, #btn {
             margin: 0 15px;
         }
         
@@ -104,17 +104,99 @@
         #lives {
             color: #0057b7; /* Ukrainian flag blue */
         }
+
+        #btn {
+            color: aquamarine;
+        }
         
         /* Controls info */
         #controls-info {
             text-align: center;
             color: white;
-            padding: 10px;
+            padding: 15px;
             font-size: 14px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .controls-section {
+            margin: 10px 0;
+        }
+        
+        .controls-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffdd00;
+            margin-bottom: 8px;
+        }
+        
+        .control-group {
+            display: inline-block;
+            margin: 0 15px;
+            vertical-align: top;
+        }
+        
+        .control-keys {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 5px;
+        }
+        
+        .key {
+            display: inline-block;
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            border: 2px solid #666;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: monospace;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            min-width: 20px;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.1s ease;
+        }
+        
+        .key.pressed {
+            background: linear-gradient(145deg, #ffdd00, #e6c400);
+            color: #000;
+            border-color: #ffdd00;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            transform: translateY(1px);
+        }
+        
+        .key.space {
+            padding: 4px 16px;
+        }
+        
+        .control-label {
+            font-size: 12px;
+            color: #ccc;
+            font-weight: bold;
+        }
+        
+        .mobile-note {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #0057b7;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .control-group {
+                display: block;
+                margin: 10px 0;
+            }
+            
+            .controls-title {
+                font-size: 14px;
+            }
         }
     </style>
-    </style>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
@@ -129,11 +211,41 @@
             <button id="restart-button-gameover">Play Again</button>
         </div>
         <div id="hud">
+            <div id="btn">Use ⬆️⬇️➡️⬅️ and SPACE btn</div>
             <div id="score">Score: 0 (Enemies: 0/10)</div>
             <div id="lives">Lives: 3</div>
         </div>
         <div id="controls-info">
-            Use WASD or Arrow keys to move and SPACE to shoot
+            <div class="controls-title">🎮 Game Controls</div>
+            <div class="controls-section">
+                <div class="control-group">
+                    <div class="control-keys">
+                        <span class="key">W</span>
+                        <span class="key">A</span>
+                        <span class="key">S</span>
+                        <span class="key">D</span>
+                    </div>
+                    <div class="control-label">Movement</div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-keys">
+                        <span class="key">↑</span>
+                        <span class="key">←</span>
+                        <span class="key">↓</span>
+                        <span class="key">→</span>
+                    </div>
+                    <div class="control-label">Arrow Keys</div>
+                </div>
+                
+                <div class="control-group">
+                    <div class="control-keys">
+                        <span class="key space">Space</span>
+                    </div>
+                    <div class="control-label">Fire</div>
+                </div>
+            </div>
+            <div class="mobile-note">📱 Touch controls available on mobile devices</div>
         </div>
     </div>
     
@@ -1095,15 +1207,15 @@
         // Event listeners for keyboard
         document.addEventListener('keydown', (e) => {
             switch (e.key.toLowerCase()) {
-                case 'w': window.keys.w = true; break;
-                case 'a': window.keys.a = true; break;
-                case 's': window.keys.s = true; break;
-                case 'd': window.keys.d = true; break;
-                case ' ': window.keys.space = true; e.preventDefault(); break;
-                case 'arrowup': window.keys.arrowUp = true; e.preventDefault(); break;
-                case 'arrowdown': window.keys.arrowDown = true; e.preventDefault(); break;
-                case 'arrowleft': window.keys.arrowLeft = true; e.preventDefault(); break;
-                case 'arrowright': window.keys.arrowRight = true; e.preventDefault(); break;
+                case 'w': window.keys.w = true; highlightKey('W'); break;
+                case 'a': window.keys.a = true; highlightKey('A'); break;
+                case 's': window.keys.s = true; highlightKey('S'); break;
+                case 'd': window.keys.d = true; highlightKey('D'); break;
+                case ' ': window.keys.space = true; highlightKey('Space'); e.preventDefault(); break;
+                case 'arrowup': window.keys.arrowUp = true; highlightKey('↑'); e.preventDefault(); break;
+                case 'arrowdown': window.keys.arrowDown = true; highlightKey('↓'); e.preventDefault(); break;
+                case 'arrowleft': window.keys.arrowLeft = true; highlightKey('←'); e.preventDefault(); break;
+                case 'arrowright': window.keys.arrowRight = true; highlightKey('→'); e.preventDefault(); break;
                 case 'r': 
                     if (gameOver) {
                         initGame();
@@ -1114,17 +1226,36 @@
 
         document.addEventListener('keyup', (e) => {
             switch (e.key.toLowerCase()) {
-                case 'w': window.keys.w = false; break;
-                case 'a': window.keys.a = false; break;
-                case 's': window.keys.s = false; break;
-                case 'd': window.keys.d = false; break;
-                case ' ': window.keys.space = false; break;
-                case 'arrowup': window.keys.arrowUp = false; break;
-                case 'arrowdown': window.keys.arrowDown = false; break;
-                case 'arrowleft': window.keys.arrowLeft = false; break;
-                case 'arrowright': window.keys.arrowRight = false; break;
+                case 'w': window.keys.w = false; unhighlightKey('W'); break;
+                case 'a': window.keys.a = false; unhighlightKey('A'); break;
+                case 's': window.keys.s = false; unhighlightKey('S'); break;
+                case 'd': window.keys.d = false; unhighlightKey('D'); break;
+                case ' ': window.keys.space = false; unhighlightKey('Space'); break;
+                case 'arrowup': window.keys.arrowUp = false; unhighlightKey('↑'); break;
+                case 'arrowdown': window.keys.arrowDown = false; unhighlightKey('↓'); break;
+                case 'arrowleft': window.keys.arrowLeft = false; unhighlightKey('←'); break;
+                case 'arrowright': window.keys.arrowRight = false; unhighlightKey('→'); break;
             }
         });
+
+        // Visual feedback functions for key presses
+        function highlightKey(keyText) {
+            const keys = document.querySelectorAll('.key');
+            keys.forEach(key => {
+                if (key.textContent === keyText) {
+                    key.classList.add('pressed');
+                }
+            });
+        }
+
+        function unhighlightKey(keyText) {
+            const keys = document.querySelectorAll('.key');
+            keys.forEach(key => {
+                if (key.textContent === keyText) {
+                    key.classList.remove('pressed');
+                }
+            });
+        }
 
         // Restart button event listeners
         restartButton.addEventListener('click', () => {
