@@ -1,12 +1,17 @@
-# Building a Combat Tank Game with AI Assistance: A Developer's Journey
+# Building a Combat Tank Game with Amazon Q CLI: A Developer's Journey
 
 ## The Game: Ukrainian Combat Tank - Always Wins
 
 For this AI-assisted development project, I chose to create "Ukrainian Combat Tank - Always Wins," a browser-based tank combat game that combines classic arcade gameplay with modern web technologies. The game features a Ukrainian-themed tank (rendered in blue and yellow flag colors) battling against enemy tanks in a maze-like environment.
 
+I used a combination of HTML5, CSS3, and JavaScript, leveraging the power of the HTML5 Canvas API for rendering. The game is designed to be fully responsive, working seamlessly on both desktop and mobile devices.
+
+Prior to starting, I had installed Amazon Q CLI and used it throught the Terminal app as well as the VS Code terminal. I also had the latest version of Node.js installed, which was essential for running the local development server and managing dependencies. MacOS requires a virtual environment due to Python being pre-installed, so I used `venv` to create an isolated environment for the project.
+
 ### Why This Game?
 
 I selected this project for several compelling reasons:
+![Ukrainian Tank Always Wins](/img/4.png)
 
 1. **Technical Complexity**: Tank games involve multiple challenging programming concepts - collision detection, projectile physics, AI pathfinding, and real-time rendering
 2. **Cross-Platform Appeal**: By building it as a web game with mobile support, it could reach the widest possible audience
@@ -42,6 +47,8 @@ Example effective prompt:
 "The tank collision detection is working for walls, but tanks can still overlap each other. Here's the current collision code: [code snippet]. I need the tanks to stop when they hit each other, similar to how they stop at walls."
 ```
 
+![Ukrainian Tank Always Wins](/img/2.png)
+
 ### 3. Platform-Specific Requirements
 
 Being explicit about target platforms yielded better results:
@@ -63,6 +70,8 @@ Detailed visual requirements produced more polished results:
 ### Collision Detection
 
 **Challenge**: Implementing pixel-perfect collision detection between multiple moving objects.
+
+![Ukrainian Tank Always Wins](/img/3.png)
 
 **AI Solution**: The AI provided a robust rectangle-based collision system:
 
@@ -102,6 +111,8 @@ let currentState = gameStates.LOADING;
 **Challenge**: Making desktop controls work seamlessly on mobile devices.
 
 **AI Solution**: The AI created a comprehensive touch control system with virtual D-pad and action buttons, complete with haptic feedback and gesture recognition.
+
+![Ukrainian Tank Always Wins](/img/1.png)
 
 ### Enemy AI Pathfinding
 
