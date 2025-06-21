@@ -82,6 +82,7 @@
         #hud {
             display: flex;
             justify-content: center;
+            align-items: center;
             width: 100%;
             padding: 5px 0;
             background-color: rgba(0, 0, 0, 0.6);
@@ -91,6 +92,8 @@
             color: white;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
             margin-top: -3px; /* Reduce space between canvas and HUD */
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
         #score, #lives, #btn {
@@ -107,6 +110,76 @@
 
         #btn {
             color: aquamarine;
+        }
+        
+        /* Game controls (fullscreen and sound toggles) */
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .toggle-btn {
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            border: 2px solid #666;
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 80px;
+            justify-content: center;
+        }
+        
+        .toggle-btn:hover {
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            border-color: #777;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(145deg, #ffdd00, #e6c400);
+            color: #000;
+            border-color: #ffdd00;
+        }
+        
+        .toggle-btn.info {
+            background: linear-gradient(145deg, #ffdd00, #e6c400);
+            color: #000;
+            border-color: #ffdd00;
+            cursor: default;
+            font-weight: bold;
+        }
+        
+        .toggle-btn.info:hover {
+            background: linear-gradient(145deg, #ffdd00, #e6c400);
+            border-color: #ffdd00;
+        }
+        
+        @media (max-width: 768px) {
+            #hud {
+                font-size: 14px;
+                padding: 8px 5px;
+            }
+            
+            .toggle-btn {
+                font-size: 12px;
+                padding: 4px 8px;
+                min-width: 60px;
+            }
+            
+            .toggle-btn.info {
+                font-size: 10px;
+                padding: 4px 6px;
+                min-width: auto;
+            }
+            
+            #score, #lives, #btn {
+                margin: 0 8px;
+            }
         }
         
         /* Controls info */
@@ -211,9 +284,19 @@
             <button id="restart-button-gameover">Play Again</button>
         </div>
         <div id="hud">
-            <div id="btn">Use ⬆️⬇️➡️⬅️ and SPACE btn</div>
             <div id="score">Score: 0 (Enemies: 0/10)</div>
             <div id="lives">Lives: 3</div>
+            <div class="game-controls">
+                <div class="toggle-btn info">
+                    <span>🎮</span> WASD/↑↓←→ + SPACE
+                </div>
+                <button id="fullscreen-btn" class="toggle-btn">
+                    <span>🔳</span> Fullscreen
+                </button>
+                <button id="sound-btn" class="toggle-btn active">
+                    <span>🔊</span> Sound
+                </button>
+            </div>
         </div>
         <div id="controls-info">
             <div class="controls-title">🎮 Game Controls</div>
@@ -323,6 +406,8 @@
         const scoreDisplay = document.getElementById('score');
         const livesDisplay = document.getElementById('lives');
         const loadingScreen = document.getElementById('loading-screen');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const soundBtn = document.getElementById('sound-btn');
     </script>
     </script>
     <script>
@@ -336,6 +421,7 @@
                     victory: null
                 };
                 this.initialized = false;
+                this.enabled = true; // Sound enabled by default
                 
                 // Initialize audio on user interaction
                 document.addEventListener('click', () => this.initAudio(), { once: true });
@@ -476,9 +562,18 @@
             }
             
             playSound(soundName) {
-                if (this.sounds[soundName]) {
+                if (this.enabled && this.sounds[soundName]) {
                     this.sounds[soundName].play();
                 }
+            }
+            
+            toggleSound() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+            
+            isSoundEnabled() {
+                return this.enabled;
             }
         }
 
@@ -1264,6 +1359,47 @@
         
         restartButtonGameover.addEventListener('click', () => {
             initGame();
+        });
+
+        // Fullscreen toggle
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    fullscreenBtn.classList.add('active');
+                    fullscreenBtn.innerHTML = '<span>🔲</span> Exit Fullscreen';
+                }).catch(err => {
+                    console.log('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    fullscreenBtn.classList.remove('active');
+                    fullscreenBtn.innerHTML = '<span>🔳</span> Fullscreen';
+                }).catch(err => {
+                    console.log('Error attempting to exit fullscreen:', err);
+                });
+            }
+        });
+
+        // Listen for fullscreen changes (e.g., ESC key)
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                fullscreenBtn.classList.remove('active');
+                fullscreenBtn.innerHTML = '<span>🔳</span> Fullscreen';
+            }
+        });
+
+        // Sound toggle
+        soundBtn.addEventListener('click', () => {
+            const soundEnabled = gameAudio.toggleSound();
+            if (soundEnabled) {
+                soundBtn.classList.remove('sound-off');
+                soundBtn.classList.add('active');
+                soundBtn.innerHTML = '<span>🔊</span> Sound';
+            } else {
+                soundBtn.classList.remove('active');
+                soundBtn.classList.add('sound-off');
+                soundBtn.innerHTML = '<span>🔇</span> Muted';
+            }
         });
 
         // Game loop
