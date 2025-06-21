@@ -65,11 +65,11 @@
         #game-container {
             position: relative;
             width: 100%;
-            max-width: 800px; /* Limit maximum width */
+            max-width: 800px;
             margin: 0 auto;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-            overflow: visible; /* Changed from hidden to visible */
+            overflow: visible;
             display: flex;
             flex-direction: column;
         }
@@ -77,31 +77,36 @@
         #gameCanvas {
             display: block;
             width: 100%;
-            height: 520px; /* Fixed height to match canvas.height */
+            height: 520px !important;
+            max-height: 520px;
             background-color: #000;
-            border-radius: 8px 8px 0 0;
+            border-radius: 0;
+            position: relative;
+            z-index: 0;
+            order: 0; /* Canvas after HUD on mobile */
         }
         
-        /* HUD styling */
+        /* Mobile-first: HUD at top to avoid touch control interference */
         #hud {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding: 15px 10px;
+            padding: 10px 5px;
             background-color: rgba(0, 0, 0, 0.9);
             font-family: 'Arial', sans-serif;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
             color: white;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            margin-top: 5px; /* Added small gap between canvas and HUD */
+            margin: 0;
             flex-wrap: wrap;
-            gap: 15px;
-            border-top: 3px solid #333;
-            border-radius: 0 0 8px 8px;
-            position: relative; /* Ensure it's not positioned over canvas */
+            gap: 8px;
+            border-bottom: 2px solid #333;
+            border-radius: 8px 8px 0 0;
+            position: static !important;
             z-index: 1;
+            order: -1; /* Place HUD before canvas on mobile */
         }
         
         #score, #lives, #btn {
@@ -199,6 +204,62 @@
             
             .game-controls {
                 gap: 6px;
+            }
+        }
+        
+        /* Desktop styles - HUD at bottom to avoid overlap */
+        @media (min-width: 769px) {
+            #game-container {
+                max-width: 800px;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            #gameCanvas {
+                width: 100% !important;
+                height: 520px !important;
+                max-width: 800px;
+                display: block;
+                position: relative;
+                z-index: 0;
+                order: 0; /* Canvas first on desktop */
+                border-radius: 8px 8px 0 0;
+            }
+            
+            #hud {
+                width: 100%;
+                max-width: 800px;
+                margin: 10px auto 0 auto;
+                padding: 15px 10px;
+                position: static;
+                display: flex;
+                font-size: 18px;
+                gap: 15px;
+                order: 1; /* HUD after canvas on desktop */
+                border-top: 3px solid #333;
+                border-bottom: none;
+                border-radius: 0 0 8px 8px;
+                /* Ensure it's completely separate from canvas */
+                top: auto;
+                left: auto;
+                right: auto;
+                bottom: auto;
+            }
+            
+            .toggle-btn {
+                font-size: 14px;
+                padding: 6px 10px;
+                min-width: 80px;
+            }
+            
+            .toggle-btn.info {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
+            
+            #score, #lives {
+                margin: 0 15px;
+                font-size: 18px;
             }
         }
         
@@ -1561,13 +1622,16 @@
                 const gameContainer = document.getElementById('game-container');
                 const containerWidth = gameContainer.clientWidth;
                 
-                // Maintain aspect ratio
-                const aspectRatio = 4/3;
-                const calculatedHeight = containerWidth / aspectRatio;
+                // Use fixed height to prevent HUD overlap
+                const fixedHeight = 520; // Match our canvas.height
                 
-                // Update canvas style
-                canvas.style.width = containerWidth + 'px';
-                canvas.style.height = calculatedHeight + 'px';
+                // Update canvas style with fixed dimensions
+                canvas.style.width = Math.min(containerWidth, 800) + 'px';
+                canvas.style.height = fixedHeight + 'px';
+            } else {
+                // Reset styles for mobile (let CSS handle it)
+                canvas.style.width = '';
+                canvas.style.height = '';
             }
         }
 
