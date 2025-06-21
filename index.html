@@ -522,13 +522,13 @@
             console.error('Initial canvas test failed');
         }
 
-        // Game constants
+        // Game constants - mobile responsive speeds
         const GRID_SIZE = 40;
         const TANK_SIZE = 35;
         const BULLET_SIZE = 8;
-        const BULLET_SPEED = 7;
-        const PLAYER_SPEED = 4;
-        const ENEMY_SPEED = 2;
+        const BULLET_SPEED = window.innerWidth <= 768 ? 4 : 7; // Slower on mobile
+        const PLAYER_SPEED = window.innerWidth <= 768 ? 2 : 4; // Slower on mobile
+        const ENEMY_SPEED = window.innerWidth <= 768 ? 1 : 2; // Slower on mobile
         const ENEMY_SHOOT_CHANCE = 0.01;
         let MAX_ENEMIES = 3; // Maximum enemies on screen at once
         let TOTAL_ENEMIES_TO_DEFEAT = 10; // Total number of enemies to defeat for victory
@@ -1621,8 +1621,19 @@
             }
         });
 
-        // Game loop
-        function gameLoop() {
+        // Game loop with mobile frame rate control
+        let lastFrameTime = 0;
+        const targetFPS = window.innerWidth <= 768 ? 30 : 60; // Lower FPS on mobile
+        const frameInterval = 1000 / targetFPS;
+        
+        function gameLoop(currentTime = 0) {
+            // Frame rate limiting for consistent speed
+            if (currentTime - lastFrameTime < frameInterval) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+            lastFrameTime = currentTime;
+            
             // Debug: Log canvas dimensions on first run
             if (!gameLoop.debugLogged) {
                 console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
@@ -1631,6 +1642,7 @@
                 console.log('Player position:', player ? player.x + ',' + player.y : 'not created');
                 console.log('Base position:', base ? base.x + ',' + base.y : 'not created');
                 console.log('Walls count:', walls ? walls.length : 'not created');
+                console.log('Target FPS:', targetFPS);
                 gameLoop.debugLogged = true;
             }
             
