@@ -89,20 +89,6 @@
 }
 }
 
-/* Fullscreen button */
-#fullscreen-btn {
-    position: absolute;
-    top: 40px; /* Move down below the HUD */
-    right: 10px;
-    z-index: 102;
-    background: rgba(0,0,0,0.5);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on iOS */
-}
-
 /* Loading screen */
 #loading-screen {
     position: fixed;
