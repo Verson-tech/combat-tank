@@ -68,14 +68,18 @@
             max-width: 800px; /* Limit maximum width */
             margin: 0 auto;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            overflow: visible; /* Changed from hidden to visible */
+            display: flex;
+            flex-direction: column;
         }
         
         #gameCanvas {
             display: block;
             width: 100%;
-            height: auto;
-            aspect-ratio: 4/3; /* Maintain aspect ratio */
+            height: 520px; /* Fixed height to match canvas.height */
             background-color: #000;
+            border-radius: 8px 8px 0 0;
         }
         
         /* HUD styling */
@@ -84,16 +88,20 @@
             justify-content: center;
             align-items: center;
             width: 100%;
-            padding: 5px 0;
-            background-color: rgba(0, 0, 0, 0.6);
+            padding: 15px 10px;
+            background-color: rgba(0, 0, 0, 0.9);
             font-family: 'Arial', sans-serif;
             font-weight: bold;
             font-size: 18px;
             color: white;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            margin-top: -3px; /* Reduce space between canvas and HUD */
+            margin-top: 5px; /* Added small gap between canvas and HUD */
             flex-wrap: wrap;
             gap: 15px;
+            border-top: 3px solid #333;
+            border-radius: 0 0 8px 8px;
+            position: relative; /* Ensure it's not positioned over canvas */
+            z-index: 1;
         }
         
         #score, #lives, #btn {
@@ -159,26 +167,38 @@
             border-color: #ffdd00;
         }
         
+        .toggle-btn.paused {
+            background: linear-gradient(145deg, #ff9900, #e68a00);
+            color: white;
+            border-color: #ff9900;
+        }
+        
         @media (max-width: 768px) {
             #hud {
                 font-size: 14px;
-                padding: 8px 5px;
+                padding: 12px 5px;
+                gap: 8px;
             }
             
             .toggle-btn {
-                font-size: 12px;
-                padding: 4px 8px;
-                min-width: 60px;
+                font-size: 11px;
+                padding: 4px 6px;
+                min-width: 55px;
             }
             
             .toggle-btn.info {
-                font-size: 10px;
-                padding: 4px 6px;
+                font-size: 9px;
+                padding: 4px 5px;
                 min-width: auto;
             }
             
             #score, #lives, #btn {
-                margin: 0 8px;
+                margin: 0 5px;
+                font-size: 13px;
+            }
+            
+            .game-controls {
+                gap: 6px;
             }
         }
         
@@ -290,6 +310,9 @@
                 <div class="toggle-btn info">
                     <span>🎮</span> WASD/↑↓←→ + SPACE
                 </div>
+                <button id="pause-btn" class="toggle-btn">
+                    <span>⏸️</span> Pause
+                </button>
                 <button id="fullscreen-btn" class="toggle-btn">
                     <span>🔳</span> Fullscreen
                 </button>
@@ -345,9 +368,9 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Set canvas size
+        // Set canvas size - reduced height to make room for HUD
         canvas.width = 800;
-        canvas.height = 600;
+        canvas.height = 520; // Further reduced from 550 to 520 for more clearance
 
         // Game constants
         const GRID_SIZE = 40;
@@ -392,6 +415,7 @@
         // Game state
         let gameRunning = true;
         let gameOver = false;
+        let gamePaused = false;
         let victory = false;
         let score = 0;
         let lives = 3;
@@ -408,6 +432,7 @@
         const loadingScreen = document.getElementById('loading-screen');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const soundBtn = document.getElementById('sound-btn');
+        const pauseBtn = document.getElementById('pause-btn');
     </script>
     </script>
     <script>
@@ -972,11 +997,16 @@
             explosions = [];
             gameRunning = true;
             gameOver = false;
+            gamePaused = false;
             victory = false;
             score = 0;
             lives = 3;
             enemiesDefeated = 0;
             totalEnemiesSpawned = 0;
+            
+            // Reset pause button
+            pauseBtn.classList.remove('paused');
+            pauseBtn.innerHTML = '<span>⏸️</span> Pause';
             
             // Update HUD
             updateHUD();
@@ -1316,6 +1346,20 @@
                         initGame();
                     }
                     break;
+                case 'p':
+                case 'escape':
+                    if (!gameOver) {
+                        gamePaused = !gamePaused;
+                        if (gamePaused) {
+                            pauseBtn.classList.add('paused');
+                            pauseBtn.innerHTML = '<span>▶️</span> Resume';
+                        } else {
+                            pauseBtn.classList.remove('paused');
+                            pauseBtn.innerHTML = '<span>⏸️</span> Pause';
+                        }
+                    }
+                    e.preventDefault();
+                    break;
             }
         });
 
@@ -1402,11 +1446,51 @@
             }
         });
 
+        // Pause toggle
+        pauseBtn.addEventListener('click', () => {
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                pauseBtn.classList.add('paused');
+                pauseBtn.innerHTML = '<span>▶️</span> Resume';
+            } else {
+                pauseBtn.classList.remove('paused');
+                pauseBtn.innerHTML = '<span>⏸️</span> Pause';
+            }
+        });
+
         // Game loop
         function gameLoop() {
             // Clear canvas
             ctx.fillStyle = COLORS.background;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // If game is paused, only draw static elements and show pause message
+            if (gamePaused) {
+                // Draw static game objects
+                base.draw();
+                walls.forEach(wall => wall.draw());
+                enemies.forEach(enemy => enemy.draw());
+                bullets.forEach(bullet => bullet.draw());
+                explosions.forEach(explosion => explosion.draw());
+                player.draw();
+                
+                // Draw pause overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw pause message
+                ctx.fillStyle = '#ffdd00';
+                ctx.font = 'bold 48px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME PAUSED', canvas.width / 2, canvas.height / 2 - 20);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '24px Arial';
+                ctx.fillText('Click Pause button to resume', canvas.width / 2, canvas.height / 2 + 30);
+                
+                requestAnimationFrame(gameLoop);
+                return;
+            }
             
             // Handle player movement
             handlePlayerMovement();
