@@ -494,18 +494,33 @@
         // Test canvas immediately to verify it works
         function testCanvas() {
             try {
+                console.log('Testing canvas...');
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(0, 0, 100, 100);
                 ctx.fillStyle = '#00ff00';
                 ctx.fillRect(100, 100, 100, 100);
-                console.log('Canvas test successful');
+                ctx.fillStyle = '#0000ff';
+                ctx.fillRect(200, 200, 100, 100);
+                console.log('Canvas test successful - colored squares should be visible');
+                
+                // Add text to verify canvas is working
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '20px Arial';
+                ctx.fillText('Canvas Working!', 50, 350);
+                
+                return true;
             } catch (error) {
                 console.error('Canvas test failed:', error);
+                return false;
             }
         }
         
         // Run canvas test immediately
-        testCanvas();
+        if (testCanvas()) {
+            console.log('Initial canvas test passed');
+        } else {
+            console.error('Initial canvas test failed');
+        }
 
         // Game constants
         const GRID_SIZE = 40;
@@ -1107,6 +1122,19 @@
 
         // Initialize game objects
         function initGame() {
+            // Ensure canvas dimensions are set correctly for mobile
+            if (window.innerWidth <= 768) {
+                // Mobile: Set canvas internal dimensions based on display size
+                const displayWidth = canvas.clientWidth;
+                const displayHeight = canvas.clientHeight;
+                
+                if (displayWidth && displayHeight) {
+                    canvas.width = displayWidth;
+                    canvas.height = displayHeight;
+                    console.log('Mobile canvas dimensions set to:', canvas.width, 'x', canvas.height);
+                }
+            }
+            
             // Create player
             player = new Tank(
                 canvas.width / 2 - TANK_SIZE / 2,
@@ -1600,22 +1628,44 @@
                 console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
                 console.log('Canvas style:', canvas.style.width, 'x', canvas.style.height);
                 console.log('Canvas client size:', canvas.clientWidth, 'x', canvas.clientHeight);
+                console.log('Player position:', player ? player.x + ',' + player.y : 'not created');
+                console.log('Base position:', base ? base.x + ',' + base.y : 'not created');
+                console.log('Walls count:', walls ? walls.length : 'not created');
                 gameLoop.debugLogged = true;
             }
             
-            // Clear canvas with explicit background
-            ctx.fillStyle = COLORS.background || '#2d4a2d';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Ensure canvas context is available
+            if (!ctx) {
+                console.error('Canvas context lost');
+                return;
+            }
             
-            // Draw a test rectangle to verify canvas is working
+            // Clear canvas with explicit background
+            try {
+                ctx.fillStyle = COLORS.background || '#2d4a2d';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } catch (error) {
+                console.error('Failed to clear canvas:', error);
+                return;
+            }
+            
+            // Draw a test rectangle to verify canvas is working (remove after debugging)
             ctx.fillStyle = '#ff0000';
             ctx.fillRect(10, 10, 50, 50);
             
             // If game is paused, only draw static elements and show pause message
             if (gamePaused) {
                 // Draw static game objects
-                if (base) base.draw();
-                if (walls) walls.forEach(wall => wall.draw());
+                try {
+                    if (base && typeof base.draw === 'function') base.draw();
+                    if (walls && Array.isArray(walls)) {
+                        walls.forEach(wall => {
+                            if (wall && typeof wall.draw === 'function') wall.draw();
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error drawing static objects:', error);
+                }
                 enemies.forEach(enemy => enemy.draw());
                 bullets.forEach(bullet => bullet.draw());
                 explosions.forEach(explosion => explosion.draw());
@@ -1655,25 +1705,55 @@
                 spawnEnemy();
             }
             
-            // Draw game objects
-            base.draw();
-            
-            for (const wall of walls) {
-                wall.draw();
-            }
-            
-            for (const bullet of bullets) {
-                bullet.draw();
-            }
-            
-            for (const explosion of explosions) {
-                explosion.draw();
-            }
-            
-            player.draw();
-            
-            for (const enemy of enemies) {
-                enemy.draw();
+            // Draw game objects with error handling
+            try {
+                if (base && typeof base.draw === 'function') {
+                    base.draw();
+                } else {
+                    console.warn('Base not available for drawing');
+                }
+                
+                if (walls && Array.isArray(walls)) {
+                    for (const wall of walls) {
+                        if (wall && typeof wall.draw === 'function') {
+                            wall.draw();
+                        }
+                    }
+                } else {
+                    console.warn('Walls not available for drawing');
+                }
+                
+                if (bullets && Array.isArray(bullets)) {
+                    for (const bullet of bullets) {
+                        if (bullet && typeof bullet.draw === 'function') {
+                            bullet.draw();
+                        }
+                    }
+                }
+                
+                if (explosions && Array.isArray(explosions)) {
+                    for (const explosion of explosions) {
+                        if (explosion && typeof explosion.draw === 'function') {
+                            explosion.draw();
+                        }
+                    }
+                }
+                
+                if (player && typeof player.draw === 'function') {
+                    player.draw();
+                } else {
+                    console.warn('Player not available for drawing');
+                }
+                
+                if (enemies && Array.isArray(enemies)) {
+                    for (const enemy of enemies) {
+                        if (enemy && typeof enemy.draw === 'function') {
+                            enemy.draw();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error drawing game objects:', error);
             }
             
             // Continue the game loop
@@ -1706,14 +1786,44 @@
             loadingScreen.addEventListener('click', () => {
                 loadingScreen.style.display = 'none';
                 
-                // Initialize game after loading screen is dismissed
-                try {
-                    initGame();
-                    gameLoop();
-                    console.log('Game initialized successfully');
-                } catch (error) {
-                    console.error('Game initialization failed:', error);
-                    alert('Game failed to start: ' + error.message);
+                // Mobile-specific canvas setup
+                if (window.innerWidth <= 768) {
+                    console.log('Setting up mobile canvas...');
+                    
+                    // Force canvas to match its display size
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                    
+                    console.log('Mobile canvas setup complete:', canvas.width, 'x', canvas.height);
+                    
+                    // Test canvas immediately on mobile
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(50, 50, 100, 100);
+                    
+                    // Wait a moment then initialize game
+                    setTimeout(() => {
+                        try {
+                            initGame();
+                            gameLoop();
+                            console.log('Mobile game initialized successfully');
+                        } catch (error) {
+                            console.error('Mobile game initialization failed:', error);
+                            alert('Game failed to start on mobile: ' + error.message);
+                        }
+                    }, 500);
+                } else {
+                    // Desktop initialization
+                    try {
+                        initGame();
+                        gameLoop();
+                        console.log('Desktop game initialized successfully');
+                    } catch (error) {
+                        console.error('Desktop game initialization failed:', error);
+                        alert('Game failed to start: ' + error.message);
+                    }
                 }
                 
                 // Initialize audio
