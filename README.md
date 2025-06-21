@@ -1,3 +1,16 @@
+<div align="center">
+
+![#amazonqcli](https://img.shields.io/badge/%23amazonqcli-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![#gamedev](https://img.shields.io/badge/%23gamedev-4B0082?style=for-the-badge&logo=unity&logoColor=white)
+![#python](https://img.shields.io/badge/%23python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![#html](https://img.shields.io/badge/%23html-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![#css](https://img.shields.io/badge/%23css-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![#javascript](https://img.shields.io/badge/%23javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![#aitools](https://img.shields.io/badge/%23aitools-00D4AA?style=for-the-badge&logo=openai&logoColor=white)
+![#awscommunity](https://img.shields.io/badge/%23awscommunity-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
+</div>
+
 # Building a Combat Tank Game with Amazon Q CLI: A Developer's Journey
 
 ## The Game: Ukrainian Combat Tank - Always Wins
