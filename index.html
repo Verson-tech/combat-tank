@@ -474,13 +474,38 @@
 
     <script src="mobile.js"></script>
     <script>
-        // Canvas setup
+        // Canvas setup with error handling
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
+        
+        // Check if canvas context is available
+        if (!ctx) {
+            console.error('Canvas 2D context not available');
+            alert('Canvas not supported on this device');
+        }
+        
         // Set canvas size - reduced height to make room for HUD
         canvas.width = 800;
         canvas.height = 520; // Further reduced from 550 to 520 for more clearance
+        
+        // Set canvas background to ensure it's visible
+        canvas.style.backgroundColor = '#000000';
+        
+        // Test canvas immediately to verify it works
+        function testCanvas() {
+            try {
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(0, 0, 100, 100);
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(100, 100, 100, 100);
+                console.log('Canvas test successful');
+            } catch (error) {
+                console.error('Canvas test failed:', error);
+            }
+        }
+        
+        // Run canvas test immediately
+        testCanvas();
 
         // Game constants
         const GRID_SIZE = 40;
@@ -1570,15 +1595,27 @@
 
         // Game loop
         function gameLoop() {
-            // Clear canvas
-            ctx.fillStyle = COLORS.background;
+            // Debug: Log canvas dimensions on first run
+            if (!gameLoop.debugLogged) {
+                console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+                console.log('Canvas style:', canvas.style.width, 'x', canvas.style.height);
+                console.log('Canvas client size:', canvas.clientWidth, 'x', canvas.clientHeight);
+                gameLoop.debugLogged = true;
+            }
+            
+            // Clear canvas with explicit background
+            ctx.fillStyle = COLORS.background || '#2d4a2d';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw a test rectangle to verify canvas is working
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(10, 10, 50, 50);
             
             // If game is paused, only draw static elements and show pause message
             if (gamePaused) {
                 // Draw static game objects
-                base.draw();
-                walls.forEach(wall => wall.draw());
+                if (base) base.draw();
+                if (walls) walls.forEach(wall => wall.draw());
                 enemies.forEach(enemy => enemy.draw());
                 bullets.forEach(bullet => bullet.draw());
                 explosions.forEach(explosion => explosion.draw());
@@ -1645,6 +1682,23 @@
 
         // Initialize game when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
+            // Android-specific initialization
+            if (navigator.userAgent.includes('Android')) {
+                console.log('Android device detected, applying fixes...');
+                
+                // Prevent zoom on double tap
+                document.addEventListener('touchstart', function(e) {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+                
+                // Prevent default touch behaviors
+                document.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
+            }
+            
             // Show loading screen first
             loadingScreen.style.display = 'flex';
             
@@ -1653,8 +1707,14 @@
                 loadingScreen.style.display = 'none';
                 
                 // Initialize game after loading screen is dismissed
-                initGame();
-                gameLoop();
+                try {
+                    initGame();
+                    gameLoop();
+                    console.log('Game initialized successfully');
+                } catch (error) {
+                    console.error('Game initialization failed:', error);
+                    alert('Game failed to start: ' + error.message);
+                }
                 
                 // Initialize audio
                 if (window.gameAudio && typeof window.gameAudio.initAudio === 'function') {
@@ -1664,29 +1724,53 @@
             
             // Handle window resize
             window.addEventListener('resize', handleResize);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(handleResize, 500); // Delay for orientation change
+            });
             handleResize(); // Initial call to set correct size
         });
         
-        // Handle window resize
+        // Handle window resize with Android compatibility
         function handleResize() {
-            if (window.innerWidth > 768) {
-                // Desktop: Use fixed dimensions
-                const gameContainer = document.getElementById('game-container');
-                const containerWidth = gameContainer.clientWidth;
+            // Force canvas redraw after resize
+            setTimeout(() => {
+                if (window.innerWidth > 768) {
+                    // Desktop: Use fixed dimensions
+                    const gameContainer = document.getElementById('game-container');
+                    const containerWidth = gameContainer.clientWidth;
+                    
+                    // Use fixed height to prevent HUD overlap
+                    const fixedHeight = 520; // Match our canvas.height
+                    
+                    // Update canvas style with fixed dimensions
+                    canvas.style.width = Math.min(containerWidth, 800) + 'px';
+                    canvas.style.height = fixedHeight + 'px';
+                } else {
+                    // Mobile: Use responsive sizing with proper aspect ratio
+                    canvas.style.width = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.maxHeight = '60vh';
+                    canvas.style.aspectRatio = '4/3';
+                    
+                    // Android-specific fixes
+                    if (navigator.userAgent.includes('Android')) {
+                        // Force canvas dimensions for Android
+                        const containerWidth = canvas.parentElement.clientWidth;
+                        const calculatedHeight = Math.min(containerWidth * 0.75, window.innerHeight * 0.6);
+                        canvas.style.width = containerWidth + 'px';
+                        canvas.style.height = calculatedHeight + 'px';
+                        
+                        // Ensure canvas internal dimensions match display size
+                        canvas.width = containerWidth;
+                        canvas.height = calculatedHeight;
+                    }
+                }
                 
-                // Use fixed height to prevent HUD overlap
-                const fixedHeight = 520; // Match our canvas.height
-                
-                // Update canvas style with fixed dimensions
-                canvas.style.width = Math.min(containerWidth, 800) + 'px';
-                canvas.style.height = fixedHeight + 'px';
-            } else {
-                // Mobile: Use responsive sizing with proper aspect ratio
-                canvas.style.width = '100%';
-                canvas.style.height = 'auto';
-                canvas.style.maxHeight = '60vh';
-                canvas.style.aspectRatio = '4/3';
-            }
+                // Force a redraw
+                if (typeof gameLoop === 'function') {
+                    requestAnimationFrame(gameLoop);
+                }
+            }, 100);
         }
 
         // Initialize game immediately if DOM is already loaded
