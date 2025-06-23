@@ -228,10 +228,14 @@
             }
             
             #gameCanvas {
+                display: block !important;
                 height: auto !important;
                 max-height: 60vh !important;
+                min-height: 300px !important; /* Ensure minimum height */
                 aspect-ratio: 4/3 !important;
                 width: 100% !important;
+                background-color: #1a1a1a !important;
+                border: 1px solid #333 !important;
             }
             
             #loading-screen {
@@ -1147,6 +1151,30 @@
 
         // Initialize game objects - simplified
         function initGame() {
+            // Ensure canvas has proper dimensions on mobile
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            
+            if (isMobileDevice) {
+                // Mobile: Set canvas dimensions based on container
+                const container = canvas.parentElement;
+                const containerWidth = container.clientWidth;
+                const containerHeight = Math.min(window.innerHeight * 0.6, containerWidth * 0.75);
+                
+                // Set both CSS and internal dimensions
+                canvas.style.width = containerWidth + 'px';
+                canvas.style.height = containerHeight + 'px';
+                canvas.width = containerWidth;
+                canvas.height = containerHeight;
+                
+                console.log('Mobile canvas dimensions set:', canvas.width, 'x', canvas.height);
+                console.log('Mobile canvas style:', canvas.style.width, 'x', canvas.style.height);
+            } else {
+                // Desktop: Use fixed dimensions
+                canvas.width = 800;
+                canvas.height = 520;
+                console.log('Desktop canvas dimensions:', canvas.width, 'x', canvas.height);
+            }
+            
             // Create player
             player = new Tank(
                 canvas.width / 2 - TANK_SIZE / 2,
@@ -1782,6 +1810,12 @@
                     ctx.fillStyle = '#1a1a1a';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
+                
+                // Ensure canvas is visible on mobile
+                canvas.style.display = 'block';
+                canvas.style.backgroundColor = '#1a1a1a';
+                canvas.style.border = '1px solid #333';
+                console.log('Mobile canvas visibility ensured');
             }
             
             // Show loading screen immediately
