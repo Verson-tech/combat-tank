@@ -234,6 +234,10 @@
                 width: 100% !important;
             }
             
+            #loading-screen {
+                z-index: 1500 !important; /* Ensure loading screen is on top on mobile */
+            }
+            
             .toggle-btn {
                 font-size: 11px;
                 padding: 4px 6px;
@@ -515,12 +519,22 @@
             }
         }
         
-        // Run canvas test immediately
+        // Run canvas test only on desktop, not mobile
         setTimeout(() => {
-            if (testCanvas()) {
-                console.log('Initial canvas test passed');
+            // Check if this is a mobile device
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            
+            if (!isMobileDevice) {
+                // Desktop: Show test squares
+                if (testCanvas()) {
+                    console.log('Initial canvas test passed');
+                } else {
+                    console.error('Initial canvas test failed');
+                }
             } else {
-                console.error('Initial canvas test failed');
+                // Mobile: Skip test squares, just log that canvas is ready
+                console.log('Mobile device detected - skipping canvas test squares');
+                console.log('Canvas should be ready for game initialization');
             }
         }, 100);
 
@@ -1757,9 +1771,25 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing game...');
             
+            // Check if mobile device
+            const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            
+            if (isMobileDevice) {
+                console.log('Mobile device detected - ensuring loading screen shows');
+                // Clear any test squares on mobile
+                if (ctx) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            
             // Show loading screen immediately
             if (loadingScreen) {
                 loadingScreen.style.display = 'flex';
+                if (isMobileDevice) {
+                    loadingScreen.style.zIndex = '1500'; // Higher z-index on mobile
+                }
                 console.log('Loading screen displayed');
             }
             
