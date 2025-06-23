@@ -515,12 +515,12 @@
             }
         }
         
-        // Run canvas test immediately - this should show colored squares right away
+        // Run canvas test immediately
         setTimeout(() => {
             if (testCanvas()) {
-                console.log('Initial canvas test passed - you should see colored squares');
+                console.log('Initial canvas test passed');
             } else {
-                console.error('Initial canvas test failed - canvas not working');
+                console.error('Initial canvas test failed');
             }
         }, 100);
 
@@ -538,7 +538,7 @@
         
         // Mobile speed multipliers (applied during movement, not to constants)
         // Note: isMobile is declared in mobile.js
-        const mobileSpeedMultiplier = (typeof isMobile !== 'undefined' && isMobile) ? 0.5 : 1.0; // Half speed on mobile
+        const mobileSpeedMultiplier = (typeof isMobile !== 'undefined' && isMobile) ? 0.7 : 1.0; // 30% slower on mobile (was 50% slower)
 
         // Colors
         const COLORS = {
